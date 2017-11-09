@@ -6,6 +6,7 @@ print(sys.path)
 
 from itertools import count
 
+#  local imports 
 from src.agents.dqn_agent import DQNAgent
 from src.models.basic_model import QNet 
 from src.games.basic_game import GameEnv
@@ -18,7 +19,7 @@ def train_agent(agent, env, nb_episodes=10):
         #  play the game
         for step_idx in count():
             #  select an action and then perform it
-            pdb.set_trace()
+            #  pdb.set_trace()
             action = agent.select_action(state)
             next_state, reward, done, _ = env.step(action[0,0])
 
@@ -34,9 +35,8 @@ def train_agent(agent, env, nb_episodes=10):
             if done: break
 
 if __name__ == '__main__':
-
     model = QNet()
-    components = {'player': [(0,199), (199,0)], 'obstacles': [(2,3), (42, 67), (99, 102)]}
-    game_env = GameEnv(200, 200, components)
+   
+    game_env = GameEnv(200, 200, [(2,3), (42, 67), (99, 102)])
     agent = DQNAgent(model, 100, 2, 0.3, 0.4)
     train_agent(agent,game_env)
