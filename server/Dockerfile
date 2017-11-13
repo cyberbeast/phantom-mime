@@ -9,4 +9,4 @@ COPY ./web/ /src/
 
 EXPOSE 8080
 
-CMD [ "npm", "run", "build" ]
+CMD [ "npm", "start" ]
