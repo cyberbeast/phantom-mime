@@ -1,5 +1,14 @@
 version: '3'
 services:
+  web:
+    image: pm/web
+    build: ./server
+    volumes:
+      - ./server/web/:/src/
+    ports:
+      - "8080:8080"
+    links:
+      - redis
   gunicorn:
     image: pm/gunicorn
     build: ./server/gunicorn
@@ -14,3 +23,4 @@ services:
     ports:
       - "6379:6379"
     hostname: "redis"
+  
