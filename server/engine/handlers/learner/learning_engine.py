@@ -3,7 +3,7 @@ from itertools import count
 
 #  local imports 
 from agents.dqn_agent import DQNAgent
-from games.basic_game import GameEnv
+from games.game_env import GameEnv
 
 class LearningEngine:
     def __init__(self, model_name, play_self=True):
@@ -25,7 +25,6 @@ class LearningEngine:
                 current_agent = self.agent_a if step_idx % 2 == 0 else self.agent_b
 
                 #  select an action and then perform it
-                #  pdb.set_trace()
                 action = current_agent.select_action(state)
                 next_state, reward, done, _ = self.env.step(action[0,0], step_idx % 2)
 
