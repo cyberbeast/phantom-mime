@@ -4,17 +4,19 @@ import torch.nn as nn, torch, torch.optim as optim, torch.nn.functional as F
 from torch.autograd import Variable
 import random
 
-from src.models.basic_model import QNet
-from src.agents.memory_replay import MemoryReplay
+#  from models.basic_model import QNet
+from agents.utils import get_model
+from agents.memory_replay import MemoryReplay
 
 class DQNAgent:
-    def __init__(self, model, memory_size, batch_size, epsilon, gamma):
+    def __init__(self, arch_name, memory_size, batch_size, epsilon, gamma):
         self.epsilon = epsilon
         self.gamma = gamma
-        self.model = model
-        self.optimizer = optim.RMSprop(model.parameters())
         self.memory = MemoryReplay(memory_size)
         self.batch_size = batch_size
+        
+        self.model = get_model(arch_name)
+        self.optimizer = optim.RMSprop(self.model.parameters())
 
     def select_action(self, state):
         dtype = torch.FloatTensor
