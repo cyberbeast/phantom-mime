@@ -112,7 +112,8 @@ Crafty.c('WinTileP1', {
   reach: function(){
     this.collision().onHit('Player',function()
     {
-      console.log("PLayer1 Win");
+      //console.log("PLayer1 Win");
+      Crafty.trigger('EndGame', "1");
     });
   }
 });
@@ -124,7 +125,8 @@ Crafty.c('WinTileP2', {
   reach: function(){
     this.collision().onHit('Player2',function()
     {
-      console.log("PLayer2 Win");
+      Crafty.trigger('EndGame', "2");
+      //console.log("PLayer2 Win");
     });
   }
 });
