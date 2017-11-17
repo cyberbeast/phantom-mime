@@ -16,7 +16,7 @@ services:
     image: pm/gunicorn
     build: ./server/gunicorn
     volumes:
-      - ./server/engine/:/src/
+      - engine-sync:/src/:nocopy
     ports:
       - "8000:8000"
     links:
@@ -38,4 +38,6 @@ services:
     hostname: "mongodb"
 volumes:
   web-sync:
+    external: true
+  engine-sync:
     external: true
