@@ -22,7 +22,6 @@ app.get('/test', function(req, res) {
 	res.send('Hello, world!');
 });
 
-// Integrate realtime API route with express. EXPERIMENTAL!!!
 app.use('/api', api);
 
 /**

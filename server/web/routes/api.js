@@ -8,7 +8,9 @@ const mongoose = require('mongoose');
 var User = require('../models/user');
 const fbConfig = require('../fb');
 
-mongoose.connect('mongodb://mongodb/');
+mongoose.connect('mongodb://mongodb/', {
+	useMongoClient: true
+});
 
 router.get('/', function(req, res, next) {
 	console.log('API');

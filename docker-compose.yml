@@ -5,7 +5,7 @@ services:
     build: ./server/web
     working_dir: /src
     volumes:
-      - ./server/web/:/src/
+      - web-sync:/src/:nocopy
     ports:
       - "8080:8080"
     command: "npm start"
@@ -36,3 +36,6 @@ services:
       - "27017:27017"
     command: mongod --smallfiles --logpath=/dev/null
     hostname: "mongodb"
+volumes:
+  web-sync:
+    external: true
