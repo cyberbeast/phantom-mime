@@ -23,7 +23,7 @@ app.get('/test', function(req, res) {
 });
 
 // Integrate realtime API route with express. EXPERIMENTAL!!!
-app.use('/', api);
+app.use('/api', api);
 
 /**
  * Get port from environment and store in Express.
@@ -35,19 +35,8 @@ app.set('port', port);
  * Create HTTP server.
  */
 const server = http.createServer(app);
-const io = require('socket.io')(server);
-io.on('connection', function(socket) {
-	console.log('User connected...');
-	socket.on('disconnect', function() {
-		console.log('User disconnected...');
-	});
-});
-app.set('socketio', io);
-
-app.use(function(req, res, next) {
-	res.io = io;
-	next();
-});
+const sockets = require('./sockets');
+sockets.socketServer(app, server);
 
 /**
  * Listen on provided port, on all network interfaces.
