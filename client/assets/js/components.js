@@ -43,28 +43,28 @@ Crafty.c('Player', {
       .color('rgb(20, 75, 25)')
       .bind("KeyDown",function(e) {
     if(e.key == Crafty.keys.LEFT_ARROW) {
-      this.x = this.x - 25;
+      this.x = this.x - Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.RIGHT_ARROW) {
-      this.x = this.x + 25;
+      this.x = this.x + Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.UP_ARROW) {
-      this.y = this.y - 25;
+      this.y = this.y - Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.DOWN_ARROW) {
-      this.y = this.y + 25;
+      this.y = this.y + Game.map_grid.tile.width;
       old_key = e.key;
   }
   }).collision().onHit('Solid',function(){
     console.log("fucking hit");
     if(old_key == Crafty.keys.LEFT_ARROW) {
-      this.x = this.x + 25;
+      this.x = this.x + Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.RIGHT_ARROW) {
-      this.x = this.x - 25;
+      this.x = this.x - Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.UP_ARROW) {
-      this.y = this.y + 25;
+      this.y = this.y + Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.DOWN_ARROW) {
-      this.y = this.y - 25;
+      this.y = this.y - Game.map_grid.tile.width;
     }
   })
   },
@@ -76,27 +76,27 @@ Crafty.c('Player2', {
       .color('rgb(255, 25, 25)')
       .bind("KeyDown",function(e) {
     if(e.key == Crafty.keys.A) {
-      this.x = this.x - 25;
+      this.x = this.x - Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.D) {
-      this.x = this.x + 25;
+      this.x = this.x + Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.W) {
-      this.y = this.y - 25;
+      this.y = this.y - Game.map_grid.tile.width;
       old_key = e.key;
     } else if (e.key == Crafty.keys.S) {
-      this.y = this.y + 25;
+      this.y = this.y + Game.map_grid.tile.width;
       old_key = e.key;
   }
   }).collision().onHit('Solid',function(){
     if(old_key == Crafty.keys.A) {
-      this.x = this.x + 25;
+      this.x = this.x + Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.D) {
-      this.x = this.x - 25;
+      this.x = this.x - Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.W) {
-      this.y = this.y + 25;
+      this.y = this.y + Game.map_grid.tile.width;
     } else if (old_key == Crafty.keys.S) {
-      this.y = this.y - 25;
+      this.y = this.y - Game.map_grid.tile.width;
     }
   }).collision().onHit('PLayer',function(){
     console.log("Hitting player 1")

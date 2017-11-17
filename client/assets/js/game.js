@@ -1,11 +1,11 @@
 Game = {
   // Initialize and start our game
   map_grid: {
-    width:  30,
-    height: 30,
+    width:  17,
+    height: 17,
     tile: {
-      width:  25,
-      height: 25
+      width:  50,
+      height: 50
     }
   },
   width: function() {
@@ -21,7 +21,7 @@ Game = {
     // Start crafty and set a background color so that we can see it's working
     Crafty.init(Game.width(), Game.height());
     // console.log(Game.map_grid);
-    Crafty.background('rgb(249, 223, 125)');
+    Crafty.background('rgb(87, 109, 20)');
     Crafty.scene('Game');
   }
 }
