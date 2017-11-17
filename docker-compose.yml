@@ -2,14 +2,15 @@ version: '3'
 services:
   web:
     image: pm/web
-    build: ./server
+    build: ./server/web
+    working_dir: /src
     volumes:
       - ./server/web/:/src/
     ports:
       - "8080:8080"
+    command: "npm start"
     links:
       - redis
-    depends_on:
       - mongodb
   gunicorn:
     image: pm/gunicorn
@@ -22,7 +23,7 @@ services:
       - redis
     hostname: "engine"
   redis:
-    image: redis
+    image: redis:alpine
     ports:
       - "6379:6379"
     hostname: "redis"
