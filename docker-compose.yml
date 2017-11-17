@@ -9,6 +9,8 @@ services:
       - "8080:8080"
     links:
       - redis
+    depends_on:
+      - mongodb
   gunicorn:
     image: pm/gunicorn
     build: ./server/gunicorn
@@ -18,9 +20,18 @@ services:
       - "8000:8000"
     links:
       - redis
+    hostname: "engine"
   redis:
     image: redis
     ports:
       - "6379:6379"
     hostname: "redis"
-  
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    ports:
+      - "27017:27017"
+    command: mongod --smallfiles --logpath=/dev/null
+    hostname: "mongodb"
