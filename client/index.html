@@ -14,6 +14,16 @@
     $(function () {
       console.log("Establishing socket connection now...");
       var socket = io('/');
+
+      socket.emit('gameInit', {
+        data: "something"
+      }, function (data) {
+        console.log(data);
+      });
+
+      socket.on('message', function (data) {
+        console.log(data);
+      })
     });
   </script>
 </head>
