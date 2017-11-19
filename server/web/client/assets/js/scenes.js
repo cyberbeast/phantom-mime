@@ -34,12 +34,13 @@ Crafty.scene('Game', function() {
             Crafty.e('Tree','Tree_sprite').at(x,y).color('rgb(87, 109, 20)');
             this.occupied[x][y]=true;
         }
-        else if (this.occupied[x][y]) {
+        else if (!this.occupied[x][y]) {
           // Place a bush entity at the current tile
 
-          var rocks_prob = Math.round(Math.random());
+          
           for (i = 0 ;i <rocks.length;i++)
           {
+          var rocks_prob = Math.round(Math.random());
           if (rocks_prob == 1)
           {
           Crafty.e('Bush','rocks1').at(rocks[i][0], rocks[i][1]).color('rgb(87, 109, 20)');
