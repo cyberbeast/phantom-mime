@@ -1,0 +1,36 @@
+<html>
+
+<head>
+  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+  <script src="assets/js/game.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/scenes.js"></script>
+  <script>
+    console.log('Loading game...');
+    window.addEventListener('load', Game.start);
+  </script>
+  <script>
+    $(function () {
+      console.log("Establishing socket connection now...");
+      var socket = io('/');
+
+      socket.emit('gameInit', {
+        data: "something"
+      }, function (data) {
+        console.log(data);
+      });
+
+      socket.on('message', function (data) {
+        console.log(data);
+      })
+    });
+  </script>
+</head>
+
+<body>
+  <a href="/api/login/facebook" target="_self">Login'</a>
+</body>
+
+</html>
