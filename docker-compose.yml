@@ -2,25 +2,42 @@ version: '3'
 services:
   web:
     image: pm/web
-    build: ./server
+    build: ./server/web
+    working_dir: /src
     volumes:
-      - ./server/web/:/src/
+      - web-sync:/src/:nocopy
     ports:
       - "8080:8080"
+    command: "npm start"
     links:
       - redis
+      - mongodb
   gunicorn:
     image: pm/gunicorn
     build: ./server/gunicorn
     volumes:
-      - ./server/engine/:/src/
+      - engine-sync:/src/:nocopy
     ports:
       - "8000:8000"
     links:
       - redis
+    hostname: "engine"
   redis:
-    image: redis
+    image: redis:alpine
     ports:
       - "6379:6379"
     hostname: "redis"
-  
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    ports:
+      - "27017:27017"
+    command: mongod --smallfiles --logpath=/dev/null
+    hostname: "mongodb"
+volumes:
+  web-sync:
+    external: true
+  engine-sync:
+    external: true

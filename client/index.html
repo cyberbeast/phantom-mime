@@ -6,6 +6,7 @@
   <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
   <script src="assets/js/game.js"></script>
   <script src="assets/js/components.js"></script>
+  <script src="assets/js/scenes.js"></script>
   <script>
     console.log('Loading game...');
     window.addEventListener('load', Game.start);
@@ -14,6 +15,16 @@
     $(function () {
       console.log("Establishing socket connection now...");
       var socket = io('/');
+
+      socket.emit('gameInit', {
+        data: "something"
+      }, function (data) {
+        console.log(data);
+      });
+
+      socket.on('message', function (data) {
+        console.log(data);
+      })
     });
   </script>
 </head>

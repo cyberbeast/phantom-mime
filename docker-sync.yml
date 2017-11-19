@@ -1,0 +1,7 @@
+version: "2"
+
+syncs:
+  web-sync:
+    src: './server/web'
+  engine-sync:
+    src: './server/engine'
