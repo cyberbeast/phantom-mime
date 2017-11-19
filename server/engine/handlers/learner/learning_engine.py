@@ -6,13 +6,14 @@ from agents.dqn_agent import DQNAgent
 from games.game_env import GameEnv
 
 class LearningEngine:
-    def __init__(self, model_name, play_self=True):
-        self.agent_a = DQNAgent(model_name, 100, 2, 0.3, 0.4)
-        self.agent_b = None if play_self else DQNAgent(model_name, 100, 2, 0.3, 0.4)
+    def __init__(self, model_name, play_self=False):
+        self.agent = DQNAgent(model_name, 100, 2, 0.3, 0.4)
+        self.opponent = None if play_self else DQNAgent(model_name, 100, 2, 0.3, 0.4)
         self.env = None
 
     def init_game(self, width, height, obstacles):
         self.env = GameEnv(width, height, obstacles)
+        self.env.reset()
 
     def train_agent(self, nb_episodes):
         for episode_idx in range(nb_episodes):
@@ -22,7 +23,7 @@ class LearningEngine:
             #  play the game
             for step_idx in count():
                 #  set current player based on turn
-                current_agent = self.agent_a if step_idx % 2 == 0 else self.agent_b
+                current_agent = self.agent if step_idx % 2 == 0 else self.opponent
 
                 #  select an action and then perform it
                 action = current_agent.select_action(state)

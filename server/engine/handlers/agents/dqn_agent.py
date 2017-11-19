@@ -18,10 +18,14 @@ class DQNAgent:
         self.model = get_model(arch_name)
         self.optimizer = optim.RMSprop(self.model.parameters())
 
-    def select_action(self, state):
+    def load_weights(self, path_to_weights):
+        with open(path_to_weights, 'rb') as f:
+            self.model.load_state_dict(torch.load(f))
+
+    def select_action(self, state, is_learning=True): 
         dtype = torch.FloatTensor
         sample = random.random()
-        if sample > self.epsilon:
+        if sample > self.epsilon or is_learning:
             state_var = Variable(state, volatile=True).type(dtype)
             q_values = self.model(state_var).data
 
@@ -31,7 +35,7 @@ class DQNAgent:
 
             return action.view(1,1)
         else:
-            return torch.LongTensor([[ random.randrange(2) ]])
+            return torch.LongTensor([[ random.randrange(4) ]])
 
     def optimize(self):
         #  only optimize the model if there batch_size number of memories

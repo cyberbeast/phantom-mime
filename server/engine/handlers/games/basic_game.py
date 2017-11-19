@@ -36,6 +36,6 @@ class BasicGame:
             return grid
 
         #  update the grid with the player's new position
-        grid[:, :, x_old, y_old] = 0
-        grid[:, :, x_new, y_new] = turn + 1
+        grid[:, :, y_old, x_old] = 0
+        grid[:, :, y_new, x_new] = turn + 1
         return grid

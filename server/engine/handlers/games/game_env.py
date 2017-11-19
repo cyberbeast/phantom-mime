@@ -23,8 +23,7 @@ class GameEnv:
         self.grid = grid
 
     def step(self, action, turn):
-        new_state = self.game_logic.process_action(deepcopy(self.grid), 
-                                                    action, turn)
-        reward = self.dtype([ self.game_logic.calc_reward(new_state) ])
-        done = self.game_logic.is_game_finished(new_state)
-        return new_state, reward, done, None
+        self.grid = self.game_logic.process_action(self.grid, action, turn)
+        reward = self.dtype([ self.game_logic.calc_reward(self.grid) ])
+        done = self.game_logic.is_game_finished(self.grid)
+        return deepcopy(self.grid), reward, done, None
