@@ -4,22 +4,28 @@ import torch.nn as nn, torch, torch.optim as optim, torch.nn.functional as F
 from torch.autograd import Variable
 import random
 
-from src.models.basic_model import QNet
-from src.agents.memory_replay import MemoryReplay
+#  from models.basic_model import QNet
+from agents.utils import get_model
+from agents.memory_replay import MemoryReplay
 
 class DQNAgent:
-    def __init__(self, model, memory_size, batch_size, epsilon, gamma):
+    def __init__(self, arch_name, memory_size, batch_size, epsilon, gamma):
         self.epsilon = epsilon
         self.gamma = gamma
-        self.model = model
-        self.optimizer = optim.RMSprop(model.parameters())
         self.memory = MemoryReplay(memory_size)
         self.batch_size = batch_size
+        
+        self.model = get_model(arch_name)
+        self.optimizer = optim.RMSprop(self.model.parameters())
 
-    def select_action(self, state):
+    def load_weights(self, path_to_weights):
+        with open(path_to_weights, 'rb') as f:
+            self.model.load_state_dict(torch.load(f))
+
+    def select_action(self, state, is_learning=True): 
         dtype = torch.FloatTensor
         sample = random.random()
-        if sample > self.epsilon:
+        if sample > self.epsilon or is_learning:
             state_var = Variable(state, volatile=True).type(dtype)
             q_values = self.model(state_var).data
 
@@ -29,7 +35,7 @@ class DQNAgent:
 
             return action.view(1,1)
         else:
-            return torch.LongTensor([[ random.randrange(2) ]])
+            return torch.LongTensor([[ random.randrange(4) ]])
 
     def optimize(self):
         #  only optimize the model if there batch_size number of memories
