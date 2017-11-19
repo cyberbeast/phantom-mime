@@ -11,7 +11,7 @@ class QNet(nn.Module):
         self.bn2 = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
         self.bn3 = nn.BatchNorm2d(32)
-        self.head = nn.Linear(32*22*22, 2)
+        self.head = nn.Linear(32*22*22, 4)
 
     def forward(self, inputs):
         inputs = F.relu(self.bn1(self.conv1(inputs)))
