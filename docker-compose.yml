@@ -15,6 +15,8 @@ services:
   gunicorn:
     image: pm/gunicorn
     build: ./server/gunicorn
+    environment:
+      - DQN_ROOT=/src/handlers
     volumes:
       - engine-sync:/src/:nocopy
     ports:

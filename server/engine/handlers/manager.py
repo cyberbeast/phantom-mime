@@ -5,6 +5,9 @@ import numpy as np
 
 from learner.learning_engine import LearningEngine
 
+def ping():
+    return "pong"
+
 def generate_obstacles(x_max, y_max, obstacles_lim):
     np.random.seed(int(os.environ['RANDOM_SEED']))
     num_obstacles = np.random.randint(obstacles_lim)
