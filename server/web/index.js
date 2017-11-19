@@ -11,9 +11,9 @@ const http = require('http');
 const api = require('./routes/api');
 
 /**
- * Point static path to /dist to serve game client.
+ * Point static path to /client to serve game client.
  */
-app.use('/', express.static(path.join(__dirname, 'dist')));
+app.use('/', express.static(path.join(__dirname, 'client')));
 
 /**
  * Expose test route.
