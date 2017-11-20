@@ -9,3 +9,8 @@ def request(name:str="World"):
 def nextmove():
     '''This API returns the next move for an AI agent based on the move made by a human player'''
     return ping()
+
+@hug.get("/gameInit")
+def gameInit(key):
+    '''This API is called when a game begins'''
+    init_learning_engine
