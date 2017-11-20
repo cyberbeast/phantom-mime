@@ -14,15 +14,15 @@ class BasicGame:
 
     def is_game_finished(self, grid):
         _, _, height, width = grid.size()
-        return grid.numpy()[:, : 0, height - 1] == 2 \
-                or grid.numpy()[:, :, width-1, 0] == 1 
+        return grid.cpu().numpy()[:, : 0, height - 1] == 2 \
+                or grid.cpu().numpy()[:, :, width-1, 0] == 1 
 
     def calc_reward(self, grid):
         return 0
 
     def process_action(self, grid, action, turn):
         _, _, height, width = grid.size()
-        state = grid.numpy()
+        state = grid.cpu().numpy()
 
         #  determine the new position of player based on turn and action
         _, _, y_old, x_old = np.where( state == ( turn + 1 ) )
@@ -32,7 +32,7 @@ class BasicGame:
         #  make sure the new position is valid (wrt game rules)
         if not (0 < x_new <= width and 0 < y_new <= height):
             return grid
-        if grid.numpy()[:, :, y_new, x_new] != 0:
+        if grid.cpu().numpy()[:, :, y_new, x_new] != 0:
             return grid
 
         #  update the grid with the player's new position
