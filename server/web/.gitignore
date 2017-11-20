@@ -59,5 +59,5 @@ typings/
 # dotenv environment variables file
 .env
 
-fb.js
+config.js
 *.json
