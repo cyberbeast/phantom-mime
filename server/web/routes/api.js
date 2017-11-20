@@ -1,12 +1,9 @@
-const server = require('../index.js').server;
-const express = require('express');
-const redis = require('redis');
-const router = express.Router();
+const router = require('express').Router();
 const passport = require('passport');
 const FacebookStrategy = require('passport-facebook').Strategy;
 const mongoose = require('mongoose');
 var User = require('../models/user');
-const fbConfig = require('../fb');
+const Config = require('../config');
 
 mongoose.connect('mongodb://mongodb/', {
 	useMongoClient: true
@@ -20,9 +17,9 @@ passport.use(
 	'facebook',
 	new FacebookStrategy(
 		{
-			clientID: fbConfig.appID,
-			clientSecret: fbConfig.appSecret,
-			callbackURL: fbConfig.callbackUrl,
+			clientID: Config.fb.appID,
+			clientSecret: Config.fb.appSecret,
+			callbackURL: Config.fb.callbackUrl,
 			profileFields: ['id', 'displayName', 'emails', 'name']
 		},
 
@@ -79,7 +76,7 @@ router.get(
 router.get(
 	'/login/facebook/callback',
 	passport.authenticate('facebook', {
-		successRedirect: '../../../',
+		successRedirect: '../../../game',
 		failureRedirect: '/api'
 	})
 );

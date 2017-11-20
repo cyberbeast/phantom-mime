@@ -1,17 +1,18 @@
-const socketio = require('socket.io');
+var gameNamespace = socket => {
+	// console.log(socket.request.session);
+	if (socket.request.sessionID !== undefined) {
+		console.log(socket.request.sessionID + ' has joined!');
+	}
 
-exports.socketServer = function(app, server) {
-	const io = socketio.listen(server);
-	io.on('connection', function(socket) {
-		console.log('User connected...');
+	socket.on('disconnect', function() {
+		console.log(socket.request.sessionID + ' has disconnected!');
+	});
 
-		socket.on('disconnect', function() {
-			console.log('User disconnected...');
-		});
+	socket.on('gameInit', function(data) {
+		console.log('REC: ' + JSON.stringify(data));
 
-		socket.on('gameInit', function(data) {
-			console.log('REC: ' + JSON.stringify(data));
-			socket.send('RECEIVED SAFELY.');
-		});
+		socket.send('RECEIVED SAFELY.');
 	});
 };
+
+module.exports.gameNamespace = gameNamespace;
