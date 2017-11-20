@@ -14,12 +14,10 @@
   <script>
     $(function () {
       console.log("Establishing socket connection now...");
-      var socket = io('/');
+      var socket = io('/game');
 
       socket.emit('gameInit', {
         data: "something"
-      }, function (data) {
-        console.log(data);
       });
 
       socket.on('message', function (data) {
@@ -30,7 +28,6 @@
 </head>
 
 <body>
-  <a href="/api/login/facebook" target="_self">Login'</a>
 </body>
 
 </html>
