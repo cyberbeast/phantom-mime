@@ -2,13 +2,14 @@ import os, sys, argparse, pdb
 sys.path.insert(0, os.environ['DQN_ROOT'])
 
 import numpy as np, redis
+from pickle import loads, dumps
 
 from learner.learning_engine import LearningEngine
 
 def ping():
     return "pong"
 
-def generate_obstacles(x_max, y_max, obstacles_lim):
+def _generate_obstacles(x_max, y_max, obstacles_lim):
     np.random.seed(int(os.environ['RANDOM_SEED']))
     num_obstacles = np.random.randint(obstacles_lim)
     obstacle_x = np.random.randint(x_max, size=num_obstacles-1) 
@@ -24,7 +25,7 @@ def next_move(user_key, retry_limit=5):
 
     #  get the learner object from the user's store
     init_user_state = r.get(user_key)
-    learner = init_user_state['learning_engine']
+    learner = loads(init_user_state['learning_engine'])
 
     while True:
         #  get updated action and turn from user store
@@ -56,7 +57,7 @@ def init_learning_engine(user_key):
 
     #  randomly generate obstacles ( upto square root of number of cells )
     game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
-    obstacles = generate_obstacles(game_width-1, game_height-1, 
+    obstacles = _generate_obstacles(game_width-1, game_height-1, 
                                 ( game_width * game_height ) // 2)
     
     player_pos = [ (game_height - 1, 0), (0, game_width - 1) ]
@@ -69,7 +70,7 @@ def init_learning_engine(user_key):
     r = redis.Redis(host='redis')
     user_state = r.get(user_key)
     user_state['game_meta'] = game_meta
-    user_state['learning_engine'] = learner
+    user_state['learning_engine'] = dumps(learner)
     return True
 
 if __name__ == '__main__':
