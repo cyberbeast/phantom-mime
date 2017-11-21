@@ -6,5 +6,6 @@ Game = {
     Crafty.init(Game1.width(), Game1.height());
     Crafty.background('rgb(87, 109, 20)');
     Crafty.scene('Game');
+   
   }
 }

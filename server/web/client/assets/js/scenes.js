@@ -61,7 +61,6 @@ Crafty.scene('Game', function() {
     Crafty.e('Player2').at(end, 1);
     Crafty.e('WinTileP1','castle_sprite2').at(end, 1).color('rgb(87, 109, 20)').reach();
     Crafty.e('WinTileP2','castle_sprite').at(1, end).color('rgb(87, 109, 20)').reach();
-
     this.show_victory = this.bind('EndGame', function(e) {
         console.log("Player:",e," Wins!")
           Crafty.scene('Victory');

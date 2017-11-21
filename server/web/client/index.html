@@ -1,6 +1,7 @@
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="http://localhost:8080/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
@@ -8,6 +9,7 @@
   <script src="assets/js/components.js"></script>
   <script src="assets/js/scenes.js"></script>
   <script src="assets/js/game_grid.js"></script>
+  <link rel="stylesheet" type="text/css" href="style.css">
   <script>
     console.log('Loading game...');
     $(function () {
@@ -18,16 +20,10 @@
         data: "something"
       });
 
-      // response
-      // {
-      //   "event": "gameInit",
-      //   "data": {}
-      // }
-
       socket.on('message', function (response) {
         if (response['event'] == 'gameInit')
         {
-          var data = response['data'];
+        var data = response['data'];
         window.addEventListener('load', Game.start(data));
         }
         else
@@ -40,7 +36,9 @@
 </head>
 
 <body>
+  <div>
   <a href="/api/login/facebook" target="_self">Login'</a>
+</div>
 </body>
 
 </html>

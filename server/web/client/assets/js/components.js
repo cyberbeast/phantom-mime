@@ -56,7 +56,6 @@ Crafty.c('Player', {
       old_key = e.key;
   }
   }).collision().onHit('Solid',function(){
-    console.log("fucking hit");
     if(old_key == Crafty.keys.LEFT_ARROW) {
       this.x = this.x + Game1.get_tilesize();
     } else if (old_key == Crafty.keys.RIGHT_ARROW) {
