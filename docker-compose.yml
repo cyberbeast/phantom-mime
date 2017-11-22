@@ -21,13 +21,15 @@ services:
       - HEIGHT=200
       - RANDOM_SEED=37
       - MODEL_NAME=qnet
+      - MONGO_HOST=mongodb
     volumes:
       - engine-sync:/src/:nocopy
     ports:
       - "8000:8000"
     links:
       - redis
-    hostname: "engine"
+      - mongodb
+    hostname: "gunicorn"
   redis:
     image: redis:alpine
     ports:
