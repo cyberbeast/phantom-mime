@@ -46,6 +46,8 @@ var gameNamespace = socket => {
 		request(options)
 			.then(function(response) {
 				// Request was successful, use the response object at will
+				// console.log('Sending this out...');
+				// console.log(JSON.stringify(response));
 				socket.send({
 					event: 'gameInit',
 					data: response

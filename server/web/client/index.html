@@ -5,13 +5,12 @@
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
   <script src="../client/assets/js/game.js"></script>
+  <script src="../client/assets/js/game_grid.js"></script>
   <script src="../client/assets/js/components.js"></script>
   <script src="../client/assets/js/scenes.js"></script>
   <script>
     console.log('Loading game...');
-    window.addEventListener('load', Game.start);
-  </script>
-  <script>
+
     $(function () {
       console.log("Establishing socket connection now...");
       var socket = io('/game');
@@ -20,8 +19,25 @@
         data: "something"
       });
 
-      socket.on('message', function (data) {
+      socket.on('message', function (response) {
+        // console.log(response);
+        data = response['data'];
+        data = {
+          boardSize: {
+            width: 15,
+            height: 15
+          },
+          playerPositions: [
+            [2, 13],
+            [13, 2]
+          ],
+          obstaclePositions: [
+            [5, 5]
+          ]
+
+        };
         console.log(data);
+        window.addEventListener('load', Game.start(data));
       })
     });
   </script>

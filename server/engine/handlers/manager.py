@@ -73,7 +73,6 @@ def init_learning_engine(user_key, fbid):
                     'player_pos': player_pos ,  'obstacles': obstacles }
     r = redis.Redis(host='redis')
     status = r.get(user_key).decode("utf-8")
-    print(client.admin.users.find_one({'id':fbid}))
     if status == 'READY':
         client.admin.users.update_one({
             'id': fbid
