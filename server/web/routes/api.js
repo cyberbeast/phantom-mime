@@ -91,6 +91,7 @@ router.get(
 router.get('/game', function(req, res) {
 	if (req.isAuthenticated()) {
 		req.session.fbid = req.user.id;
+		req.session.email = req.user.email;
 		res.sendFile(path.join(__dirname + '/../client/index.html'));
 	} else {
 		res.send('ERROR');

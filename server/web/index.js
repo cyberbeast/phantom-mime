@@ -71,8 +71,8 @@ io.use((socket, next) => {
 
 var game = io.of('/game');
 game.on('connection', sockets.gameNamespace);
-// game.on('connection', sockets.gameNamespace);
-
+var lounge = io.of('/lounge');
+game.on('loungeConnection', sockets.loungeNamespace);
 app.use(sessionMiddleware);
 app.use((req, res, next) => {
 	console.log(`From Express: ${req.sessionID}`);

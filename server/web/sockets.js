@@ -2,15 +2,16 @@ const redis = require('redis'),
 	config = require('./config'),
 	request = require('request-promise');
 
-var gameNamespace = socket => {
-	const client = redis.createClient({
-		host: config.redis.host,
-		port: config.redis.port
-	});
+const client = redis.createClient({
+	host: config.redis.host,
+	port: config.redis.port
+});
 
-	client.on('error', function(err) {
-		console.log(err);
-	});
+client.on('error', function(err) {
+	console.log(err);
+});
+
+var gameNamespace = socket => {
 	// console.log(socket.request.session);
 	if (socket.request.sessionID !== undefined) {
 		console.log(socket.request.sessionID + ' has joined!');
@@ -58,4 +59,12 @@ var gameNamespace = socket => {
 	});
 };
 
+var loungeNamespace = socket => {
+	socket.on('checkIn', function(data) {
+		client.lpush('loungeMembers', socket.request.session.email);
+		socket.broadcast.emit('memberList', socket.request.session.email);
+	});
+};
+
 module.exports.gameNamespace = gameNamespace;
+module.exports.loungeNamespace = loungeNamespace;
