@@ -1,16 +1,16 @@
 Crafty.c('Grid',{
     init: function() {
     this.attr({
-      w: Game.map_grid.tile.width,
-      h: Game.map_grid.tile.height
+      w: Game1.get_tilesize(),
+      h: Game1.get_tilesize()
     })
 },
 at: function(x,y)
 {
 if (x === undefined && y === undefined) {
-      return { x: this.x/Game.map_grid.tile.width, y: this.y/Game.map_grid.tile.height }
+      return { x: this.x/Game1.get_tilesize(), y: this.y/Game1.get_tilesize() }
     } else {
-      this.attr({ x: x * Game.map_grid.tile.width, y: y * Game.map_grid.tile.height });
+      this.attr({ x: x * Game1.get_tilesize(), y: y * Game1.get_tilesize() });
       return this;
     }
 },
@@ -43,28 +43,27 @@ Crafty.c('Player', {
       .color('rgb(20, 75, 25)')
       .bind("KeyDown",function(e) {
     if(e.key == Crafty.keys.LEFT_ARROW) {
-      this.x = this.x - Game.map_grid.tile.width;
+      this.x = this.x - Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.RIGHT_ARROW) {
-      this.x = this.x + Game.map_grid.tile.width;
+      this.x = this.x + Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.UP_ARROW) {
-      this.y = this.y - Game.map_grid.tile.width;
+      this.y = this.y - Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.DOWN_ARROW) {
-      this.y = this.y + Game.map_grid.tile.width;
+      this.y = this.y + Game1.get_tilesize();
       old_key = e.key;
   }
   }).collision().onHit('Solid',function(){
-    console.log("fucking hit");
     if(old_key == Crafty.keys.LEFT_ARROW) {
-      this.x = this.x + Game.map_grid.tile.width;
+      this.x = this.x + Game1.get_tilesize();
     } else if (old_key == Crafty.keys.RIGHT_ARROW) {
-      this.x = this.x - Game.map_grid.tile.width;
+      this.x = this.x - Game1.get_tilesize();
     } else if (old_key == Crafty.keys.UP_ARROW) {
-      this.y = this.y + Game.map_grid.tile.width;
+      this.y = this.y + Game1.get_tilesize();
     } else if (old_key == Crafty.keys.DOWN_ARROW) {
-      this.y = this.y - Game.map_grid.tile.width;
+      this.y = this.y - Game1.get_tilesize();
     }
   })
   },
@@ -76,27 +75,27 @@ Crafty.c('Player2', {
       .color('rgb(255, 25, 25)')
       .bind("KeyDown",function(e) {
     if(e.key == Crafty.keys.A) {
-      this.x = this.x - Game.map_grid.tile.width;
+      this.x = this.x - Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.D) {
-      this.x = this.x + Game.map_grid.tile.width;
+      this.x = this.x + Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.W) {
-      this.y = this.y - Game.map_grid.tile.width;
+      this.y = this.y - Game1.get_tilesize();
       old_key = e.key;
     } else if (e.key == Crafty.keys.S) {
-      this.y = this.y + Game.map_grid.tile.width;
+      this.y = this.y + Game1.get_tilesize();
       old_key = e.key;
   }
   }).collision().onHit('Solid',function(){
     if(old_key == Crafty.keys.A) {
-      this.x = this.x + Game.map_grid.tile.width;
+      this.x = this.x + Game1.get_tilesize();
     } else if (old_key == Crafty.keys.D) {
-      this.x = this.x - Game.map_grid.tile.width;
+      this.x = this.x - Game1.get_tilesize();
     } else if (old_key == Crafty.keys.W) {
-      this.y = this.y + Game.map_grid.tile.width;
+      this.y = this.y + Game1.get_tilesize();
     } else if (old_key == Crafty.keys.S) {
-      this.y = this.y - Game.map_grid.tile.width;
+      this.y = this.y - Game1.get_tilesize();
     }
   }).collision().onHit('PLayer',function(){
     console.log("Hitting player 1")
