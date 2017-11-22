@@ -1,12 +1,16 @@
 import numpy as np, pdb
 
+def move_up(x, y): return ( x, y - 1 )
+def move_down(x, y): return ( x, y + 1 )
+def move_left(x, y): return ( x - 1, y )
+def move_right(x, y): return ( x + 1, y )
+
 def _init_action_set():
-    move_up = lambda x, y: ( x, y - 1 )
-    move_down = lambda x, y: ( x, y + 1 )
-    move_left = lambda x, y: ( x - 1, y )
-    move_right = lambda x, y: ( x + 1, y )
     
-    return [ move_up, move_down, move_left, move_right ]
+    move_up_fn, move_down_fn = move_up, move_down
+    move_left_fn, move_right_fn = move_left, move_right
+
+    return [ move_up_fn, move_down_fn, move_left_fn, move_right_fn ]
 
 class BasicGame:
     def __init__(self):

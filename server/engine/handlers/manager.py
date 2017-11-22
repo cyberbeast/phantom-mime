@@ -1,10 +1,14 @@
 import os, sys, argparse, pdb
 sys.path.insert(0, os.environ['DQN_ROOT'])
 
-import numpy as np, redis
+import numpy as np, redis, json
 from pickle import loads, dumps
+from pymongo import MongoClient
 
 from learner.learning_engine import LearningEngine
+
+client = MongoClient(os.environ['MONGO_HOST'])
+
 
 def ping():
     return "pong"
@@ -12,8 +16,8 @@ def ping():
 def _generate_obstacles(x_max, y_max, obstacles_lim):
     np.random.seed(int(os.environ['RANDOM_SEED']))
     num_obstacles = np.random.randint(obstacles_lim)
-    obstacle_x = np.random.randint(x_max, size=num_obstacles-1) 
-    obstacle_y = np.random.randint(y_max, size=num_obstacles-1) 
+    obstacle_x = np.random.randint(x_max, size=num_obstacles-1).tolist() 
+    obstacle_y = np.random.randint(y_max, size=num_obstacles-1).tolist() 
     obstacles = set([ (i, j) for i, j in zip(obstacle_x, obstacle_y) ])
     return list(obstacles)
 
@@ -51,7 +55,7 @@ def next_move(user_key, retry_limit=5):
 
         yield action_ls[agent_action[0, 0]]
 
-def init_learning_engine(user_key):
+def init_learning_engine(user_key, fbid):
     print('\nInitializing learning engine. Please wait..')
     learner = LearningEngine(os.environ['MODEL_NAME'])
 
@@ -68,10 +72,34 @@ def init_learning_engine(user_key):
     game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
                     'player_pos': player_pos ,  'obstacles': obstacles }
     r = redis.Redis(host='redis')
-    user_state = r.get(user_key)
-    user_state['game_meta'] = game_meta
-    user_state['learning_engine'] = dumps(learner)
-    return True
+    status = r.get(user_key).decode("utf-8")
+    print(client.admin.users.find_one({'id':fbid}))
+    if status == 'READY':
+        client.admin.users.update_one({
+            'id': fbid
+        }, {
+            "$set": {
+                'learning_engine': dumps(learner)
+            }
+        })
+        user_state = {}
+        user_state['game_meta'] = game_meta
+        # Write to redis.
+        r.set(user_key, json.dumps(user_state))
+        # Respond to request with dictionary.
+        response_data = {
+            "boardSize": {
+                "width": game_meta['grid_width'],
+                "height": game_meta['grid_height']
+            },
+            "playerPositions": game_meta['player_pos'],
+            "obstaclePositions": game_meta['obstacles']
+        }
+        return response_data
+    else:
+        return {
+            "error": "INIT FAILURE"
+        }
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
