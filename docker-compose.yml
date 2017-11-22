@@ -17,6 +17,10 @@ services:
     build: ./server/gunicorn
     environment:
       - DQN_ROOT=/src/handlers
+      - WIDTH=200
+      - HEIGHT=200
+      - RANDOM_SEED=37
+      - MODEL_NAME=qnet
     volumes:
       - engine-sync:/src/:nocopy
     ports:
