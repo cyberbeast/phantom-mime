@@ -96,7 +96,7 @@ def init_learning_engine(user_key, fbid):
     #  randomly generate obstacles ( upto square root of number of cells )
     game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
     obstacles = _generate_obstacles(game_width, game_height) # ( game_width * game_height ) // 2)
-    player_pos = [ (game_height, 1), (1, game_width) ]
+    player_pos = [ (game_height-1, 0), (0, game_width-1) ]
     learner.init_game(game_width, game_height, obstacles)
 
     print('Learning engine initialization complete!\n')

@@ -38,6 +38,8 @@ class grid{
     }
     get_playerPosition()
     {
+        this.playerPositions[1] = [this.playerPositions[1][0]+1,this.playerPositions[1][1]+1];
+        this.playerPositions[0] = [this.playerPositions[0][0]+1,this.playerPositions[0][1]+1];
         return [this.playerPositions[1],this.playerPositions[0]];
     }
 
