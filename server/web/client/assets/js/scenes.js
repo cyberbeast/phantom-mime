@@ -1,10 +1,11 @@
 Crafty.scene(
 	'Game',
 	function() {
-		console.log('Passing value', Game1.get_gridwidth());
-		var playerPositions = Game1.get_playerPosition();
-		var tile_value = playerPositions[0];
-		var tile_value2 = playerPositions[1];
+		var positions = Game1.get_playerPosition();
+		var tile_value = positions[0];
+		var tile_value2 = positions[1];
+		console.log("Player position"+tile_value);
+		console.log("Player position"+tile_value2);
 		var rocks = Game1.get_obstaclePosition();
 		Crafty.sprite('assets/sprites/castle1_50x50.gif', {
 			castle_sprite: [0, 0, 50, 50]
@@ -18,21 +19,6 @@ Crafty.scene(
 		Crafty.sprite('assets/sprites/rocks2_50x50.png', {
 			rocks2: [0, 0, 50, 50]
 		});
-		this.occupied = new Array(Game1.get_gridwidth());
-		for (var i = 0; i < Game1.get_gridwidth(); i++) {
-			this.occupied[i] = new Array(Game1.get_gridheight());
-			for (var y = 0; y < Game1.get_gridheight(); y++) {
-				if (
-					(i == tile_value[1]) |
-					(y == tile_value[1]) |
-					(((i == tile_value[0]) | (y == tile_value[0])) & (i != y))
-				) {
-					this.occupied[i][y] = true;
-				} else {
-					this.occupied[i][y] = false;
-				}
-			}
-		}
 		Crafty.sprite('assets/sprites/tree_50x50.png', {
 			Tree_sprite: [0, 0, 50, 50]
 		});
@@ -47,37 +33,30 @@ Crafty.scene(
 					Crafty.e('Tree', 'Tree_sprite')
 						.at(x, y)
 						.color('rgb(87, 109, 20)');
-					this.occupied[x][y] = true;
-				} else if (!this.occupied[x][y]) {
-					// Place a bush entity at the current tile
-
-					for (i = 0; i < rocks.length; i++) {
-						var rocks_prob = Math.round(Math.random());
-						if (rocks_prob == 1) {
-							Crafty.e('Bush', 'rocks1')
-								.at(rocks[i][0], rocks[i][1])
-								.color('rgb(87, 109, 20)');
-						} else {
-							Crafty.e('Bush', 'rocks2')
-								.at(rocks[i][0], rocks[i][1])
-								.color('rgb(87, 109, 20)');
-						}
-						this.occupied[x][y] = true;
-					}
-				}
+				} 
 			}
 		}
 
-		console.log(this.occupied);
-		var end = Game1.get_gridwidth() - 2;
-		Crafty.e('Player').at(1, end);
-		Crafty.e('Player2').at(end, 1);
+			for (var i = 0; i < rocks.length; i++) {
+				var rocks_prob = Math.round(Math.random());
+				if (rocks_prob == 1) {
+					Crafty.e('Bush', 'rocks1')
+						.at(rocks[i][0], rocks[i][1])
+						.color('rgb(87, 109, 20)');
+				} else {
+					Crafty.e('Bush', 'rocks2')
+						.at(rocks[i][0], rocks[i][1])
+						.color('rgb(87, 109, 20)');
+				}
+			}
+		Crafty.e('Player').at(tile_value[0], tile_value[1]);
+		Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
 		Crafty.e('WinTileP1', 'castle_sprite2')
-			.at(end, 1)
+			.at(tile_value2[0], tile_value2[1])
 			.color('rgb(87, 109, 20)')
 			.reach();
 		Crafty.e('WinTileP2', 'castle_sprite')
-			.at(1, end)
+			.at(tile_value[0], tile_value[1])
 			.color('rgb(87, 109, 20)')
 			.reach();
 		this.show_victory = this.bind('EndGame', function(e) {
@@ -96,9 +75,9 @@ Crafty.scene(
 		Crafty.e('2D, DOM, Text')
 			.attr({ x: 15, y: 15 })
 			.text('Victory!');
-		this.restart_game = this.bind('KeyDown', function() {
-			Crafty.scene('Game');
-		});
+		//this.restart_game = this.bind('KeyDown', function() {
+		//	Crafty.scene('Game');
+		//});
 	},
 	function() {
 		this.unbind('KeyDown');

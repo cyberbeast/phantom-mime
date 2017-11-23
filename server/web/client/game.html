@@ -21,16 +21,9 @@
   
         socket.on('message', function (response) {
           console.log(response);
-          if (response['event'] == 'gameInit')
-          {
           var data = response['data'];
-          console.log(data);
+          data ={}
           window.addEventListener('load', Game.start(data));
-          }
-          else
-          {
-          console.log("womp womp");
-          }
         })
       });
     </script>

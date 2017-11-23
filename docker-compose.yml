@@ -17,8 +17,8 @@ services:
     build: ./server/gunicorn
     environment:
       - DQN_ROOT=/src/handlers
-      - WIDTH=20
-      - HEIGHT=20
+      - WIDTH=15
+      - HEIGHT=15
       - RANDOM_SEED=37
       - MODEL_NAME=qnet
       - MONGO_HOST=mongodb

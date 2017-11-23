@@ -20,30 +20,15 @@
       });
 
       socket.on('message', function (response) {
-        // console.log(response);
+        console.log(response);
         data = response['data'];
-        data = {
-          boardSize: {
-            width: 15,
-            height: 15
-          },
-          playerPositions: [
-            [2, 13],
-            [13, 2]
-          ],
-          obstaclePositions: [
-            [5, 5]
-          ]
-
-        };
         console.log(data);
+
         window.addEventListener('load', Game.start(data));
       })
     });
   </script>
 </head>
-
 <body>
 </body>
-
 </html>
