@@ -12,7 +12,7 @@ client = MongoClient(os.environ['MONGO_HOST'])
 def ping():
     return "pong"
 
-def _generate_obstacles(mx, my):
+def _generate_obstacles(mx, my, max_removed):
     maze = [[0 for x in range(mx)] for y in range(my)]
     dx = [0, 1, 0, -1]; dy = [-1, 0, 1, 0] # 4 directions to move in the maze
     # start the maze from a random cell
@@ -44,16 +44,16 @@ def _generate_obstacles(mx, my):
     grid = np.array(maze)
 
     rocks_y, rocks_x = list(map(lambda x: x.tolist(), np.where(grid == 0)))
+    rock_ls = list(zip(rocks_y, rocks_x))
 
-    return list(zip(rocks_y, rocks_x))
-
-# def _generate_obstacles(x_max, y_max, obstacles_lim):
-#     np.random.seed(int(os.environ['RANDOM_SEED']))
-#     num_obstacles = np.random.randint(obstacles_lim)
-#     obstacle_x = np.random.randint(x_max + 1, size=num_obstacles-1).tolist() 
-#     obstacle_y = np.random.randint(y_max + 1, size=num_obstacles-1).tolist() 
-#     obstacles = set([ (i, j) for i, j in zip(obstacle_y, obstacle_x) ])
-#     return list(obstacles)
+    num_remove = np.random.randint(max_removed)
+    print('\nRemoving {} obstacles from total {} obstacles'.format(num_remove, len(rock_ls)))
+    for i in range(num_remove):
+        remove_idx = random.randint(0, len(rock_ls))
+        rock_ls.pop(remove_idx)
+    
+            
+    return rock_ls
 
 def next_move(user_key, retry_limit=5):
     action_ls = ['up', 'down', 'left', 'right']
@@ -95,7 +95,7 @@ def init_learning_engine(user_key, fbid):
 
     #  randomly generate obstacles ( upto square root of number of cells )
     game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
-    obstacles = _generate_obstacles(game_width, game_height) # ( game_width * game_height ) // 2)
+    obstacles = _generate_obstacles(game_width, game_height, 10)
     player_pos = [ (game_height-1, 0), (0, game_width-1) ]
     learner.init_game(game_width, game_height, obstacles)
 
