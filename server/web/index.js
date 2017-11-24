@@ -51,16 +51,14 @@ var sessionMiddleware = session({
  * 		'/' : Homepage (login)
  */
 app.get('/', function(req, res) {
-	var homeHtml = `
-	<a href='/api/login/facebook'>Login</a>
-	`;
-	res.send(homeHtml);
+	res.sendFile(path.join(__dirname + '/client/index.html'));
 });
 
 /**
  * 		paths for static files
  */
 app.use('*/js', express.static(path.join(__dirname, 'client/assets/js')));
+app.use('*/css', express.static(path.join(__dirname, 'client/assets/css')));
 app.use(
 	'*/sprites',
 	express.static(path.join(__dirname, 'client/assets/sprites'))
@@ -71,8 +69,10 @@ io.use((socket, next) => {
 
 var game = io.of('/game');
 game.on('connection', sockets.gameNamespace);
+
 var lounge = io.of('/lounge');
-game.on('loungeConnection', sockets.loungeNamespace);
+lounge.on('connection', sockets.loungeNamespace);
+
 app.use(sessionMiddleware);
 app.use((req, res, next) => {
 	console.log(`From Express: ${req.sessionID}`);

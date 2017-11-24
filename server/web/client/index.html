@@ -1,36 +1,48 @@
-<html>
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="">
+<!--<![endif]-->
 
 <head>
+
   <script src="http://localhost:8080/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
   <script src="../client/assets/js/game.js"></script>
-  <script src="../client/assets/js/game_grid.js"></script>
   <script src="../client/assets/js/components.js"></script>
   <script src="../client/assets/js/scenes.js"></script>
-  <script>
-    console.log('Loading game...');
-
-    $(function () {
-      console.log("Establishing socket connection now...");
-      var socket = io('/game');
-
-      socket.emit('gameInit', {
-        data: "something"
-      });
-
-      socket.on('message', function (response) {
-        console.log(response);
-        data = response['data'];
-        console.log(data);
-
-        window.addEventListener('load', Game.start(data));
-      })
-    });
-  </script>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phantom-mime</title>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="../client/assets/css/main.css">
 </head>
 
 <body>
+<!-- header section -->
+<section class="banner" role="banner">
+  
+  <!-- banner text -->
+  <div class="container">
+    <div class="col-md-10 col-md-offset-1">
+      <div class="banner-text text-center">
+        <h1>Ready Player One</h1>
+        <a type="button" class="btn btn-primary btn-block" href='/api/login/facebook'>Login</a>
+        <!-- banner text --> 
+      </div>
+    </div>
+  </div>
+</section>
+<!-- header section --> 
+<!-- description text section -->
+<!-- JS FILES --> 
 </body>
+<script>
 
+</script>
 </html>
