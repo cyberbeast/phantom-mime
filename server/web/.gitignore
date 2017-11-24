@@ -60,4 +60,5 @@ typings/
 .env
 
 config.js
+
 *.json

@@ -12,10 +12,7 @@ Crafty.c('Grid', {
 				y: this.y / Game1.get_tilesize()
 			};
 		} else {
-			this.attr({
-				x: x * Game1.get_tilesize(),
-				y: y * Game1.get_tilesize()
-			});
+			this.attr({ x: x * Game1.get_tilesize(), y: y * Game1.get_tilesize() });
 			return this;
 		}
 	}
@@ -62,7 +59,6 @@ Crafty.c('Player', {
 			})
 			.collision()
 			.onHit('Solid', function() {
-				console.log('fucking hit');
 				if (old_key == Crafty.keys.LEFT_ARROW) {
 					this.x = this.x + Game1.get_tilesize();
 				} else if (old_key == Crafty.keys.RIGHT_ARROW) {
