@@ -15,13 +15,21 @@ services:
   gunicorn:
     image: pm/gunicorn
     build: ./server/gunicorn
+    environment:
+      - DQN_ROOT=/src/handlers
+      - WIDTH=14
+      - HEIGHT=14
+      - RANDOM_SEED=37
+      - MODEL_NAME=qnet
+      - MONGO_HOST=mongodb
     volumes:
       - engine-sync:/src/:nocopy
     ports:
       - "8000:8000"
     links:
       - redis
-    hostname: "engine"
+      - mongodb
+    hostname: "gunicorn"
   redis:
     image: redis:alpine
     ports:

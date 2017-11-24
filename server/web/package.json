@@ -1,27 +1,32 @@
 {
-	"name": "web",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"start": "nodemon index.js --exec babel-node --presets env",
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"author": "cyberbeast",
-	"license": "ISC",
-	"dependencies": {
-		"express": "^4.16.2",
-		"mongoose": "^4.13.3",
-		"passport": "^0.4.0",
-		"passport-facebook": "^2.1.1",
-		"redis": "^2.8.0",
-		"socket.io": "^2.0.4"
-	},
-	"devDependencies": {
-		"babel-cli": "^6.26.0",
-		"babel-preset-env": "^1.6.1",
-		"babel-preset-es2015": "^6.24.1",
-		"babel-preset-stage-2": "^6.24.1",
-		"nodemon": "^1.12.1"
-	}
+  "name": "web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js --exec babel-node --presets env",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cyberbeast",
+  "license": "ISC",
+  "dependencies": {
+    "connect-redis": "^3.3.2",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "express-socket.io-session": "^1.3.2",
+    "mongoose": "^4.13.3",
+    "passport": "^0.4.0",
+    "passport-facebook": "^2.1.1",
+    "redis": "^2.8.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "socket.io": "^2.0.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "nodemon": "^1.12.1"
+  }
 }

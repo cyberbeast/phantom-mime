@@ -6,7 +6,8 @@ var userSchema = new Schema({
 	access_token: String,
 	firstName: String,
 	lastName: String,
-	email: String
+	email: String,
+	learning_engine: { type: String, default: '' }
 });
 
 var User = mongoose.model('User', userSchema);

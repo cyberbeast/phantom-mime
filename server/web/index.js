@@ -1,29 +1,22 @@
-'use strict';
+const express = require('express'),
+	session = require('express-session'),
+	socketio = require('socket.io'),
+	api = require('./routes/api.js'),
+	sockets = require('./sockets'),
+	redis = require('redis'),
+	config = require('./config'),
+	path = require('path'),
+	redisStore = require('connect-redis')(session);
 
-const express = require('express');
-const app = express();
-const path = require('path');
-const http = require('http');
-
-/**
- * Fetch API implementation methods.
- */
-const api = require('./routes/api');
-
-/**
- * Point static path to /client to serve game client.
- */
-app.use('/', express.static(path.join(__dirname, 'client')));
-
-/**
- * Expose test route.
- */
-app.get('/test', function(req, res) {
-	res.send('Hello, world!');
+const client = redis.createClient({
+	host: config.redis.host,
+	port: config.redis.port
+});
+client.on('error', function(err) {
+	console.log(err);
 });
 
-app.use('/api', api);
-
+var app = express();
 /**
  * Get port from environment and store in Express.
  */
@@ -31,17 +24,62 @@ const port = process.env.PORT || '8080';
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * 		Listen on provided port, on all network interfaces.
  */
-const server = http.createServer(app);
-const sockets = require('./sockets');
-sockets.socketServer(app, server);
+var server = app.listen(port, () => {
+	console.log(`Web server running on localhost:${port}`);
+});
 
 /**
- * Listen on provided port, on all network interfaces.
+ * 		Expose socketio server on the same port, on all network interfaces.
  */
-server.listen(port, () =>
-	console.log(`Web server running on localhost:${port}`)
-);
+var io = socketio(server);
 
-module.exports = server;
+var sessionMiddleware = session({
+	secret: 'ssshhhhhh',
+	store: new redisStore({
+		host: config.redis.host,
+		port: config.redis.port,
+		client: client,
+		disableTTL: true
+	}),
+	resave: false,
+	saveUninitialized: true
+});
+
+/**
+ * 		'/' : Homepage (login)
+ */
+app.get('/', function(req, res) {
+	var homeHtml = `
+	<a href='/api/login/facebook'>Login</a>
+	`;
+	res.send(homeHtml);
+});
+
+/**
+ * 		paths for static files
+ */
+app.use('*/js', express.static(path.join(__dirname, 'client/assets/js')));
+app.use(
+	'*/sprites',
+	express.static(path.join(__dirname, 'client/assets/sprites'))
+);
+io.use((socket, next) => {
+	sessionMiddleware(socket.request, {}, next);
+});
+
+var game = io.of('/game');
+game.on('connection', sockets.gameNamespace);
+var lounge = io.of('/lounge');
+game.on('loungeConnection', sockets.loungeNamespace);
+app.use(sessionMiddleware);
+app.use((req, res, next) => {
+	console.log(`From Express: ${req.sessionID}`);
+	next();
+});
+
+/**
+ * 		'/api' : Login routes
+ */
+app.use('/api', api);

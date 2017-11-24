@@ -1,12 +1,11 @@
-const server = require('../index.js').server;
-const express = require('express');
-const redis = require('redis');
-const router = express.Router();
+const router = require('express').Router();
 const passport = require('passport');
 const FacebookStrategy = require('passport-facebook').Strategy;
 const mongoose = require('mongoose');
 var User = require('../models/user');
-const fbConfig = require('../fb');
+const Config = require('../config');
+const path = require('path');
+const fs = require('fs');
 
 mongoose.connect('mongodb://mongodb/', {
 	useMongoClient: true
@@ -20,9 +19,9 @@ passport.use(
 	'facebook',
 	new FacebookStrategy(
 		{
-			clientID: fbConfig.appID,
-			clientSecret: fbConfig.appSecret,
-			callbackURL: fbConfig.callbackUrl,
+			clientID: Config.fb.appID,
+			clientSecret: Config.fb.appSecret,
+			callbackURL: Config.fb.callbackUrl,
 			profileFields: ['id', 'displayName', 'emails', 'name']
 		},
 
@@ -79,17 +78,32 @@ router.get(
 router.get(
 	'/login/facebook/callback',
 	passport.authenticate('facebook', {
-		successRedirect: '../../../',
 		failureRedirect: '/api'
-	})
+	}),
+	function(req, res) {
+		// console.log(JSON.stringify(req.user));
+		console.log('FB called this URL...');
+		// console.log(JSON.stringify(req.sessionID));
+		res.redirect('/api/game');
+	}
 );
+
+router.get('/game', function(req, res) {
+	if (req.isAuthenticated()) {
+		req.session.fbid = req.user.id;
+		req.session.email = req.user.email;
+		res.sendFile(path.join(__dirname + '/../client/index.html'));
+	} else {
+		res.send('ERROR');
+	}
+});
 
 passport.serializeUser(function(user, done) {
 	done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
-	User.findById(id, function(err, user) {
+	User.findOne({ id: String(id) }, function(err, user) {
 		done(err, user);
 	});
 });
