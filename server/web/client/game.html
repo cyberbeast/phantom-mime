@@ -16,7 +16,7 @@
       console.log("Establishing socket connection now...");
       var socket = io('/game');
       socket.emit('gameInit', {
-        data: "something"
+        data: "from Game"
       });
 
       socket.on('message', function (response) {

@@ -62,9 +62,16 @@ var gameNamespace = socket => {
 };
 
 var loungeNamespace = socket => {
+	if (socket.request.sessionID !== undefined) {
+		console.log(socket.request.sessionID + ' has joined!');
+	}
 	socket.on('checkIn', function(data) {
+		console.log(socket.request.session);
+		client.lrange('loungeMembers', 0, -1, function(err, reply) {
+			console.log(reply);
+			socket.broadcast.emit('memberList', { data: reply });
+		});
 		client.lpush('loungeMembers', socket.request.session.email);
-		socket.broadcast.emit('memberList', socket.request.session.email);
 	});
 };
 

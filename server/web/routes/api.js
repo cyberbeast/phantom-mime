@@ -92,6 +92,8 @@ router.get('/dashboard', function(req, res) {
 	if (req.isUnauthenticated()) {
 		res.redirect('/../client/index.html');
 	}
+	req.session.fbid = req.user.id;
+	req.session.email = req.user.email;
 	res.sendFile(path.join(__dirname + '/../client/dashboard.html'));
 });
 
