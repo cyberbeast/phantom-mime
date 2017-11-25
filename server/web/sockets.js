@@ -66,18 +66,31 @@ var loungeNamespace = socket => {
 		'Session in LOUNGE' + JSON.stringify(socket.request.session.email)
 	);
 
+	// client.DEL('loungeMembers', function(err, res) {
+	// 	console.log('ERR: ' + err);
+	// 	console.log('RES: ' + res);
+	// });
+
 	if (socket.request.sessionID !== undefined) {
 		console.log(socket.request.sessionID + ' has joined! LOUNGE');
 	}
 
 	socket.on('checkIn', function(data) {
 		console.log(socket.request.session);
-		client.sadd('loungeMembers', [socket.request.session.email]);
+		client.sadd('loungeMembers', [
+			socket.request.session.email + ':' + socket.id
+		]);
 		client.smembers('loungeMembers', function(err, reply) {
 			console.log(reply);
 			socket.emit('memberList', { data: reply });
 			socket.broadcast.emit('memberList', { data: reply });
 		});
+	});
+
+	socket.on('challengePlayer', function(data) {
+		console.log(
+			socket.request.session.email + ' wants to challenge ' + data.player
+		);
 	});
 
 	socket.on('disconnect', function() {

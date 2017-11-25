@@ -28,27 +28,32 @@
         data: "from Dashboard"
       })
       lounge.on('memberList', function (msg) {
+
         console.log(msg['data'])
         var users = String(msg['data']).split(',');
+
         $('#members').empty();
-        for (var i = 0;i<users.length;i++)
-        { 
-        $('#members').append($('<li class ="list-group-item" id="user"></li>').text(users[i]));
-        // window.scrollTo(0, document.body.scrollHeight);
+        for (var i = 0; i < users.length; i++) {
+          $('#members').append($('<li class ="list-group-item" id="user"></li>').text(users[i]));
+          // window.scrollTo(0, document.body.scrollHeight);
+        }
+
+      });
+      $("#members").on("click", '#user', function () {
+        if (!$(this).hasClass("active")) {
+          // Remove the class from anything that is active
+          $("li.active").removeClass("active");
+          // And make this active
+          $(this).addClass("active");
+          lounge.emit('challengePlayer', {
+            "player": $(this).text()
+          });
+          console.log($(this).text());
         }
       });
-      $("#members").on("click",'#user', function(){
-        if (!$(this).hasClass("active")) {
-            // Remove the class from anything that is active
-            $("li.active").removeClass("active");
-            // And make this active
-            $(this).addClass("active");
-        console.log($(this).text());
-        }
+
+
     });
-
-
-});
   </script>
 
 </head>
@@ -63,25 +68,25 @@
         <div class="text-center">
           <h1>Choose Your Path</h1>
         </div>
-        </div>
-        <div class = "col-md-6 col-lg-6">
-          <a type="button" class="btn btn-primary btn-block" href='/api/game'>Train your AI</a>
-          
-          </div>
-          <div class = "col-md-6 col-lg-6">
-              <a type="button" class="btn btn-primary btn-block" href=''>Play against another player</a>
-              <ul class="list-group" id ="members">
+      </div>
+      <div class="col-md-6 col-lg-6">
+        <a type="button" class="btn btn-primary btn-block" href='/api/game'>Train your AI</a>
 
-                </ul>
-          </div>
-          <!-- banner text -->
-        </div>
-    <div class = "container">
-      
+      </div>
+      <div class="col-md-6 col-lg-6">
+        <a type="button" class="btn btn-primary btn-block" href=''>Play against another player</a>
+        <ul class="list-group" id="members">
+
+        </ul>
+      </div>
+      <!-- banner text -->
+    </div>
+    <div class="container">
+
       <ul id="members"></ul>
     </div>
   </section>
-  
+
 
   <!-- header section -->
   <!-- description text section -->
