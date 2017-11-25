@@ -15,6 +15,7 @@ class DQNAgent:
         self.memory = MemoryReplay(memory_size)
         self.batch_size = batch_size
         
+    def init_model(arch_name):
         self.model = get_model(arch_name)
         self.optimizer = optim.RMSprop(self.model.parameters())
 

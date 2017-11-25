@@ -5,13 +5,38 @@ import numpy as np, redis, json, random
 from pickle import loads, dumps
 from pymongo import MongoClient
 
-from learner.learning_engine import LearningEngine
+from rival.learning_engine import LearningEngine
 
 client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
 
 def ping():
     return "pong"
+
+def _init_learning_engine(user_data, learner_name):
+    print('\nInitializing learning engine. Please wait..')
+    learner = LearningEngine(learner_name)
+
+    #  load saved weights if any, store model initial weights otherwise
+    if (learner_name + '_weights') in user_data:
+        rival.agent.load_weights(user_data[learner_name + '_weights'])
+    else:
+        user_data[learner_name + '_weights'] = rival.agent.save_weights()
+
+    user_data[learner_name] = dumps(rival)
+
+    #  randomly generate obstacles 
+    game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
+    obstacles = _generate_obstacles(game_width, game_height, 10)
+    player_pos = [ (game_height-1, 0), (0, game_width-1) ]
+    rival.init_game(game_width, game_height, obstacles)
+
+    print('Learning engine initialization complete!\n')
+
+    game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
+                    'player_pos': player_pos ,  'obstacles': obstacles }
+
+    return rival, game_meta
 
 def _generate_obstacles(mx, my, max_removed):
     maze = [[0 for x in range(mx)] for y in range(my)]
@@ -56,12 +81,12 @@ def _generate_obstacles(mx, my, max_removed):
             
     return rock_ls
 
-def next_move(user_key, fbid, retry_limit=5):
+def next_move(user_key, fbid, mode='train', retry_limit=5):
     action_ls = ['up', 'down', 'left', 'right']
     
     #  get learning engine from user data
     user_data = client.find_one({ 'id': fbid })
-    learner = user_data['learning_engine']
+    rival = user_data['the_rival'] if mode == 'train' else user_data['mime']
 
     while True:
         #  get user's recent action and game turn from session data
@@ -70,12 +95,12 @@ def next_move(user_key, fbid, retry_limit=5):
 
         #  get the current state of the game post user action
         print('\nUpdating game state by user action..')
-        state, _, _, _ = learner.env.step(action_ls.index(user_action), turn)
+        state, _, _, _ = rival.env.step(action_ls.index(user_action), turn)
         
         #  make agent choose an action
         print('\nUpdating game state by agent action...')
-        agent_action = learner.agent.select_action(state)
-        next_state, _, _, _ = learner.env.step(agent_action[0, 0], (turn + 1) % 2)
+        agent_action = rival.agent.select_action(state)
+        next_state, _, _, _ = rival.env.step(agent_action[0, 0], (turn + 1) % 2)
         retries = 0
 
         #  repeat if chosen action is invalid
@@ -83,8 +108,8 @@ def next_move(user_key, fbid, retry_limit=5):
             print('\nUpdating game state by agent action (retry {})...'.format(retries))
             #  agent chooses randomly if too many invalid moves are chosen
             #  otherwise choose from learned weights
-            agent_action = learner.agent.select_action(state, retries < retry_limit)
-            next_state, _, done, _ = learner.env.step(agent_action[0, 0], (turn + 1) % 2)
+            agent_action = rival.agent.select_action(state, retries < retry_limit)
+            next_state, _, done, _ = rival.env.step(agent_action[0, 0], (turn + 1) % 2)
             retries += 1
 
         session_data['action'] = action_ls[agent_action[0, 0]]
@@ -93,26 +118,7 @@ def next_move(user_key, fbid, retry_limit=5):
 
         yield status 
 
-def _init_learning_engine():
-    print('\nInitializing learning engine. Please wait..')
-    learner = LearningEngine(os.environ['MODEL_NAME'])
-
-    #  randomly generate obstacles ( upto square root of number of cells )
-    game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
-    obstacles = _generate_obstacles(game_width, game_height, 10)
-    player_pos = [ (game_height-1, 0), (0, game_width-1) ]
-    learner.init_game(game_width, game_height, obstacles)
-
-    print('Learning engine initialization complete!\n')
-
-    game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
-                    'player_pos': player_pos ,  'obstacles': obstacles }
-
-    return learner, game_meta
-
-def init_game(user_key, fbid):
-    learner, game_meta = _init_learning_engine()
-
+def init_game(user_key, fbid, mode='train'):
     #  get user status
     status = r.get(user_key).decode("utf-8")
     if status == 'READY':
@@ -123,13 +129,8 @@ def init_game(user_key, fbid):
         #  break out if no user data found
         if user_data is None: break
 
-        #  load saved weights if any, store model initial weights otherwise
-        if 'learned_weights' in user_data:
-            learner.agent.load_weights(user_data['learned_weights'])
-        else:
-            user_data['learned_weights'] = learner.agent.save_weights()
-
-        user_data['learning_engine'] = dumps(learner)
+        learner_type = 'the_rival' if mode == 'train' else 'mime'
+        user_data, game_meta = _init_learning_engine(user_data, learner_type)
         
         client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
         session_data = {}
@@ -156,12 +157,12 @@ def init_game(user_key, fbid):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--mode', default='train', help='mode to run the learner in')
+    parser.add_argument('--mode', default='train', help='mode to run the rival in')
     parser.add_argument('--nb_epochs', type=int, default=10, 
                             help='number of epochs to train agent for')
 
     args = parser.parse_args()
     
     #  pdb.set_trace()
-    learner = init_learning_engine()
-    next_move(learner, 'up', 1)
+    rival = init_learning_engine()
+    next_move(rival, 'up', 1)
