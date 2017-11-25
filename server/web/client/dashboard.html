@@ -46,11 +46,11 @@
       lounge.on('newChallengeRequest', function (data) {
         console.log('REQUEST RECEIVED')
         if (confirm(data.challenger + " wants to challenge you! Press OK to accept!") == true) {
-          console.log("Pressed okay");
           lounge.emit('challengeStatus', {
             status: "OK",
             payload: data
           })
+          window.location.replace("/api/game"+data.gSession);
         } else {
           console.log("Pressed not okay");
         }
@@ -58,6 +58,7 @@
 
       lounge.on('challengeAccepted', function (data) {
         console.log("ACCEPTED! Redirect to " + data.redirectParam)
+        window.location.replace("/api/game"+data.redirectParam);
         // redirect here
       })
 
