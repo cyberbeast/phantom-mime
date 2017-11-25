@@ -62,16 +62,31 @@ var gameNamespace = socket => {
 };
 
 var loungeNamespace = socket => {
+	console.log(
+		'Session in LOUNGE' + JSON.stringify(socket.request.session.email)
+	);
+
 	if (socket.request.sessionID !== undefined) {
-		console.log(socket.request.sessionID + ' has joined!');
+		console.log(socket.request.sessionID + ' has joined! LOUNGE');
 	}
+
 	socket.on('checkIn', function(data) {
 		console.log(socket.request.session);
-		client.lrange('loungeMembers', 0, -1, function(err, reply) {
+		client.sadd('loungeMembers', [socket.request.session.email]);
+		client.smembers('loungeMembers', function(err, reply) {
+			console.log(reply);
+			socket.emit('memberList', { data: reply });
+			socket.broadcast.emit('memberList', { data: reply });
+		});
+	});
+
+	socket.on('disconnect', function() {
+		client.SREM('loungeMembers', [socket.request.session.email]);
+		console.log(socket.request.sessionID + ' has disconnected from LOUNGE!');
+		client.smembers('loungeMembers', function(err, reply) {
 			console.log(reply);
 			socket.broadcast.emit('memberList', { data: reply });
 		});
-		client.lpush('loungeMembers', socket.request.session.email);
 	});
 };
 
