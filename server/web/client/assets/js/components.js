@@ -53,37 +53,6 @@ Crafty.c('Player2', {
 		var old_key = null;
 		this.requires('Actor, Fourway, Color, Collision')
 			.color('rgb(255, 25, 25)')
-			/*.bind('KeyDown', function(e) {
-				if (e.key == Crafty.keys.A) {
-					this.x = this.x - Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.D) {
-					this.x = this.x + Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.W) {
-					this.y = this.y - Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.S) {
-					this.y = this.y + Game1.get_tilesize();
-					old_key = e.key;
-				}
-			})
-			.collision()
-			.onHit('Solid', function() {
-				if (old_key == Crafty.keys.A) {
-					this.x = this.x + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.D) {
-					this.x = this.x - Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.W) {
-					this.y = this.y + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.S) {
-					this.y = this.y - Game1.get_tilesize();
-				}
-			})
-			.collision()
-			.onHit('PLayer', function() {
-				console.log('Hitting player 1');
-			});*/
 	}
 });
 

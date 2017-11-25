@@ -50,11 +50,9 @@ Crafty.scene(
 		// Player entities
 		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
 		var player2 = Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
-		player1.bind('KeyDown', function(e) {
+		player1.bind('turn', function(e) {
 			if (e.key == Crafty.keys.LEFT_ARROW) {
-				console.log(Crafty.keys.LEFT_ARROW);
 				this.x = this.x - Game1.get_tilesize();
-				this.unbind('KeyDown');
 				old_key = e.key;
 			} else if (e.key == Crafty.keys.RIGHT_ARROW) {
 				this.x = this.x + Game1.get_tilesize();
@@ -76,6 +74,11 @@ Crafty.scene(
 					this.y = this.y - Game1.get_tilesize();
 				}
 			});
+
+		player1.bind('KeyDown',function(e)
+	{
+		player1.trigger('turn',e);
+	});
 		player2.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.A) {
 					this.x = this.x - Game1.get_tilesize();
