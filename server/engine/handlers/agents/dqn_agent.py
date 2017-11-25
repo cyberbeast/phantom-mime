@@ -16,11 +16,16 @@ class DQNAgent:
         self.batch_size = batch_size
         
         self.model = get_model(arch_name)
-        self.optimizer = optim.RMSprop(self.model.parameters())
+        self.optimizer = optim.SGD(self.model.parameters())
 
-    def load_weights(self, path_to_weights):
-        with open(path_to_weights, 'rb') as f:
-            self.model.load_state_dict(torch.load(f))
+    def load_weights(self, weights):
+        state_dict = pickle.loads(state_dict)
+        self.model.load_state_dict(state_dict)
+        self.optimizer = optim.SGD(self.model.parameters())
+
+    def save_weights(self):
+        state_dict = self.model.state_dict()
+        return pickle.dumps(state_dict)
 
     def select_action(self, state, is_learning=True): 
         dtype = torch.FloatTensor

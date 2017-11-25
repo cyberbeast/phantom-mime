@@ -125,9 +125,10 @@ def init_game(user_key, fbid):
 
         #  load saved weights if any, store model initial weights otherwise
         if 'learned_weights' in user_data:
-            learner.load_model_weights(user_data['learned_weights'])
+            learner.agent.load_weights(user_data['learned_weights'])
         else:
-            user_data['learned_weights'] = learner.save_model_weights()
+            user_data['learned_weights'] = learner.agent.save_weights()
+
         user_data['learning_engine'] = dumps(learner)
         
         client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
