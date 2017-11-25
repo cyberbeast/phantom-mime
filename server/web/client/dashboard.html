@@ -54,7 +54,7 @@
             status: "OK",
             payload: data
           })
-          window.location.replace("/api/game" + data.gSession + "player2=" + myID);
+          window.location.replace("/api/game" + data.gSession + data.challengerUID + "&player2=" + myID);
         } else {
           console.log("Pressed not okay");
         }

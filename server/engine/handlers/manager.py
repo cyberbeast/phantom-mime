@@ -5,7 +5,7 @@ import numpy as np, redis, json, random
 from pickle import loads, dumps
 from pymongo import MongoClient
 
-from rival.learning_engine import LearningEngine
+from learner.learning_engine import LearningEngine
 
 client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
@@ -143,16 +143,21 @@ def init_game(game_key, delimiter=':'):
     #  get user status
     status = r.get(game_key).decode("utf-8")
     if status == 'READY':
-        #  randomly generate obstacles 
-        game_meta = {}
-        game_meta['grid_width'] = int(os.environ['WIDTH'])
-        game_meta['grid_height'] = int(os.environ['HEIGHT'])
-        game_meta['obstacles'] = _generate_obstacles(game_width, game_height, 10)
-        game_meta['player_pos'] = [ (game_height-1, 0), (0, game_width-1) ]
+        game_meta = r.get(game_key + delimiter + 'game_meta')
+        if  game_meta is None:
+            #  randomly generate obstacles
+            game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT']) 
+            game_meta = {}
+            game_meta['grid_width'] = game_width
+            game_meta['grid_height'] = game_height
+            game_meta['obstacles'] = _generate_obstacles(game_width, game_height, 10)
+            game_meta['player_pos'] = [ (game_height-1, 0), (0, game_width-1) ]
         
-        # write session data to redis.
-        r.set(game_key + delimiter + 'game_meta', json.dumps(session_data))
-
+            # write session data to redis.
+            r.set(game_key + delimiter + 'game_meta', json.dumps(game_meta))
+        else:
+            game_meta = json.loads(game_meta)
+            
         # send back game metadata as response
         response_data = {
             "boardSize": {
