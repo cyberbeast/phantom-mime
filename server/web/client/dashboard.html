@@ -28,6 +28,10 @@
       lounge.emit('checkIn', {
         data: "from Dashboard"
       })
+      var myID;
+      lounge.on('sessID', function (id) {
+        myID = id
+      })
       lounge.on('memberList', function (msg) {
 
         console.log(msg['data'])
@@ -50,7 +54,7 @@
             status: "OK",
             payload: data
           })
-          window.location.replace("/api/game"+data.gSession);
+          window.location.replace("/api/game" + data.gSession + "player2=" + myID);
         } else {
           console.log("Pressed not okay");
         }
@@ -58,7 +62,7 @@
 
       lounge.on('challengeAccepted', function (data) {
         console.log("ACCEPTED! Redirect to " + data.redirectParam)
-        window.location.replace("/api/game"+data.redirectParam);
+        window.location.replace("/api/game" + data.redirectParam);
         // redirect here
       })
 

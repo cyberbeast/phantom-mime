@@ -19,8 +19,7 @@
         data: "from Game"
       });
 
-      socket.on('message', function (response) {
-
+      socket.on('gameInitResponse', function (response) {
         var data = response['data'];
         console.log(data);
         window.addEventListener('load', Game.start(data));
