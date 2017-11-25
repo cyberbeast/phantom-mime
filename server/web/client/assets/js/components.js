@@ -12,10 +12,7 @@ Crafty.c('Grid', {
 				y: this.y / Game1.get_tilesize()
 			};
 		} else {
-			this.attr({
-				x: x * Game1.get_tilesize(),
-				y: y * Game1.get_tilesize()
-			});
+			this.attr({ x: x * Game1.get_tilesize(), y: y * Game1.get_tilesize() });
 			return this;
 		}
 	}

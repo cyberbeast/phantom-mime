@@ -84,15 +84,27 @@ router.get(
 		// console.log(JSON.stringify(req.user));
 		console.log('FB called this URL...');
 		// console.log(JSON.stringify(req.sessionID));
-		res.redirect('/api/game');
+		res.redirect('/api/dashboard');
 	}
 );
+
+router.get('/dashboard', function(req, res) {
+	if (req.isUnauthenticated()) {
+		res.redirect('/../client/index.html');
+	}
+	req.session.fbid = req.user.id;
+	req.session.email = req.user.email;
+	res.sendFile(path.join(__dirname + '/../client/dashboard.html'));
+});
 
 router.get('/game', function(req, res) {
 	if (req.isAuthenticated()) {
 		req.session.fbid = req.user.id;
 		req.session.email = req.user.email;
-		res.sendFile(path.join(__dirname + '/../client/index.html'));
+		req.session.gSession = req.query.gameID;
+		req.session.p1 = req.query.player1;
+		req.session.p2 = req.query.player2;
+		res.sendFile(path.join(__dirname + '/../client/game.html'));
 	} else {
 		res.send('ERROR');
 	}

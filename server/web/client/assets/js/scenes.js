@@ -4,6 +4,11 @@ Crafty.scene(
 		var positions = Game1.get_playerPosition();
 		var tile_value = positions[0];
 		var tile_value2 = positions[1];
+<<<<<<< HEAD
+=======
+		console.log('Player position' + tile_value);
+		console.log('Player position' + tile_value2);
+>>>>>>> master
 		var rocks = Game1.get_obstaclePosition();
 		Crafty.sprite('assets/sprites/castle1_50x50.gif', {
 			castle_sprite: [0, 0, 50, 50]
@@ -31,21 +36,20 @@ Crafty.scene(
 					Crafty.e('Tree', 'Tree_sprite')
 						.at(x, y)
 						.color('rgb(87, 109, 20)');
-				} 
+				}
 			}
 		}
 
-			for (var i = 0; i < rocks.length; i++) {
-				var rocks_prob = Math.round(Math.random());
-				if (rocks_prob == 1) {
-					Crafty.e('Bush', 'rocks1')
-						.at(rocks[i][0], rocks[i][1])
-						.color('rgb(87, 109, 20)');
-				} else {
-					Crafty.e('Bush', 'rocks2')
-						.at(rocks[i][0], rocks[i][1])
-						.color('rgb(87, 109, 20)');
-				}
+		for (var i = 0; i < rocks.length; i++) {
+			var rocks_prob = Math.round(Math.random());
+			if (rocks_prob == 1) {
+				Crafty.e('Bush', 'rocks1')
+					.at(rocks[i][0], rocks[i][1])
+					.color('rgb(87, 109, 20)');
+			} else {
+				Crafty.e('Bush', 'rocks2')
+					.at(rocks[i][0], rocks[i][1])
+					.color('rgb(87, 109, 20)');
 			}
 		// Player entities
 		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);

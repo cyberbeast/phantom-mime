@@ -1,37 +1,37 @@
 <html>
-  
-  <head>
-    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script src="../client/assets/js/game.js"></script>
-    <script src="../client/assets/js/components.js"></script>
-    <script src="../client/assets/js/scenes.js"></script>
-    <script src="../client/assets/js/game_grid.js"></script>
-    <script>
-      console.log('Loading game...');
-      var data=6;
 
-      $(function () {
-        console.log("Establishing socket connection now...");
-        var socket = io('/game');
-        socket.emit('gameInit', {
-          data: "something"
-        });
-  
-        socket.on('message', function (response) {
-          console.log(response);
-          var data = response['data'];
-          data ={}
-          window.addEventListener('load', Game.start(data));
-        })
+<head>
+  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="../client/assets/js/game.js"></script>
+  <script src="../client/assets/js/components.js"></script>
+  <script src="../client/assets/js/scenes.js"></script>
+  <script src="../client/assets/js/game_grid.js"></script>
+  <script>
+    console.log('Loading game...');
+    var data = 6;
+
+    $(function () {
+      console.log("Establishing socket connection now...");
+      var socket = io('/game');
+      socket.emit('gameInit', {
+        data: "from Game"
       });
-    </script>
-  </head>
-  
-  <body>
-    <div>
+
+      socket.on('gameInitResponse', function (response) {
+        var data = response['data'];
+        console.log(data);
+        window.addEventListener('load', Game.start(data));
+        console.log("womp womp");
+      })
+    });
+  </script>
+</head>
+
+<body>
+  <div>
   </div>
-  </body>
-  
-  </html>
+</body>
+
+</html>
