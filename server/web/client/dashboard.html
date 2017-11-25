@@ -43,6 +43,23 @@
 
       });
 
+      lounge.on('newChallengeRequest', function (data) {
+        console.log('REQUEST RECEIVED')
+        if (confirm(data.challenger + " wants to challenge you! Press OK to accept!") == true) {
+          console.log("Pressed okay");
+          lounge.emit('challengeStatus', {
+            status: "OK",
+            payload: data
+          })
+        } else {
+          console.log("Pressed not okay");
+        }
+      })
+
+      lounge.on('challengeAccepted', function (data) {
+        console.log("ACCEPTED! Redirect to " + data.redirectParam)
+        // redirect here
+      })
 
 
       $("#members").on("click", '#user', function () {
@@ -55,11 +72,7 @@
             "player": response
           });
           console.log(response);
-          if (confirm("Match Ready") == true) {
-            console.log("Pressed okay");
-        } else {
-          console.log("Pressed not okay");
-        }
+
         }
       });
 

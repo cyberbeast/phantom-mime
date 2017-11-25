@@ -95,6 +95,26 @@ var loungeNamespace = socket => {
 				' wants to challenge ' +
 				data.player
 		);
+		var extract = data.player.split(':');
+		console.log(extract);
+		socket.to(extract[1]).emit('newChallengeRequest', {
+			challenger: socket.request.session.email,
+			challengerID: socket.id,
+			challengeeID: extract[1],
+			gSession:
+				'?gameID=' +
+				socket.id.replace('/lounge#', '') +
+				extract[1].replace('/lounge#', '')
+		});
+	});
+
+	socket.on('challengeStatus', function(data) {
+		console.log('status check.');
+		if (data.status == 'OK') {
+			socket
+				.to(data.payload.challengerID)
+				.emit('challengeAccepted', { redirectParam: data.payload.gSession });
+		}
 	});
 
 	socket.on('disconnect', function() {
