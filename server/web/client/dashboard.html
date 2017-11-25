@@ -18,6 +18,7 @@
   <script>
     $(function () {
       var list_users = [];
+      var email2id = {};
       console.log("Attempting to connect now...")
       var lounge = io('/lounge')
       console.log('check 1', lounge.connected);
@@ -31,24 +32,26 @@
 
         console.log(msg['data'])
         var users = String(msg['data']).split(',');
-
         $('#members').empty();
         for (var i = 0; i < users.length; i++) {
-          $('#members').append($('<li class ="list-group-item" id="user"></li>').text(users[i]));
+          email = users[i].split(':')[0];
+          var id = users[i].split(':')[1];
+          email2id[email] = id;
+          $('#members').append($('<li class ="list-group-item" id="user"></li>').text(email));
           // window.scrollTo(0, document.body.scrollHeight);
         }
 
       });
       $("#members").on("click", '#user', function () {
+        var email = $(this).text()
+        var response = email+':'+email2id[$(this).text()]
         if (!$(this).hasClass("active")) {
-          // Remove the class from anything that is active
           $("li.active").removeClass("active");
-          // And make this active
           $(this).addClass("active");
           lounge.emit('challengePlayer', {
-            "player": $(this).text()
+            "player": response
           });
-          console.log($(this).text());
+          console.log(response);
         }
       });
 
