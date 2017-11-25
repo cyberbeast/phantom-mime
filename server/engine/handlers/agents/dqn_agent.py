@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import torch.nn as nn, torch, torch.optim as optim, torch.nn.functional as F 
 from torch.autograd import Variable
-import random
+import random, pickle
 
 #  from models.basic_model import QNet
 from agents.utils import get_model
@@ -15,12 +15,18 @@ class DQNAgent:
         self.memory = MemoryReplay(memory_size)
         self.batch_size = batch_size
         
+    def init_model(arch_name):
         self.model = get_model(arch_name)
         self.optimizer = optim.RMSprop(self.model.parameters())
 
-    def load_weights(self, path_to_weights):
-        with open(path_to_weights, 'rb') as f:
-            self.model.load_state_dict(torch.load(f))
+    def load_weights(self, weights):
+        state_dict = pickle.loads(weights)
+        self.model.load_state_dict(state_dict)
+        self.optimizer = optim.RMSprop(self.model.parameters())
+
+    def save_weights(self):
+        state_dict = self.model.state_dict()
+        return pickle.dumps(state_dict)
 
     def select_action(self, state, is_learning=True): 
         dtype = torch.FloatTensor
