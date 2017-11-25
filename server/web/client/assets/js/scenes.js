@@ -4,8 +4,11 @@ Crafty.scene(
 		var positions = Game1.get_playerPosition();
 		var tile_value = positions[0];
 		var tile_value2 = positions[1];
+<<<<<<< HEAD
+=======
 		console.log('Player position' + tile_value);
 		console.log('Player position' + tile_value2);
+>>>>>>> master
 		var rocks = Game1.get_obstaclePosition();
 		Crafty.sprite('assets/sprites/castle1_50x50.gif', {
 			castle_sprite: [0, 0, 50, 50]
@@ -48,9 +51,64 @@ Crafty.scene(
 					.at(rocks[i][0], rocks[i][1])
 					.color('rgb(87, 109, 20)');
 			}
-		}
-		Crafty.e('Player').at(tile_value[0], tile_value[1]);
-		Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
+		// Player entities
+		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
+		var player2 = Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
+		player1.bind('turn', function(e) {
+			if (e.key == Crafty.keys.LEFT_ARROW) {
+				this.x = this.x - Game1.get_tilesize();
+				old_key = e.key;
+			} else if (e.key == Crafty.keys.RIGHT_ARROW) {
+				this.x = this.x + Game1.get_tilesize();
+				old_key = e.key;
+			} else if (e.key == Crafty.keys.UP_ARROW) {
+				this.y = this.y - Game1.get_tilesize();
+				old_key = e.key;
+			} else if (e.key == Crafty.keys.DOWN_ARROW) {
+				this.y = this.y + Game1.get_tilesize();
+				old_key = e.key;
+			}}).onHit('Solid', function() {
+				if (old_key == Crafty.keys.LEFT_ARROW) {
+					this.x = this.x + Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.RIGHT_ARROW) {
+					this.x = this.x - Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.UP_ARROW) {
+					this.y = this.y + Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.DOWN_ARROW) {
+					this.y = this.y - Game1.get_tilesize();
+				}
+			});
+
+		player1.bind('KeyDown',function(e)
+	{
+		player1.trigger('turn',e);
+	});
+		player2.bind('KeyDown', function(e) {
+				if (e.key == Crafty.keys.A) {
+					this.x = this.x - Game1.get_tilesize();
+					old_key = e.key;
+				} else if (e.key == Crafty.keys.D) {
+					this.x = this.x + Game1.get_tilesize();
+					old_key = e.key;
+				} else if (e.key == Crafty.keys.W) {
+					this.y = this.y - Game1.get_tilesize();
+					old_key = e.key;
+				} else if (e.key == Crafty.keys.S) {
+					this.y = this.y + Game1.get_tilesize();
+					old_key = e.key;
+				}
+			})
+			.onHit('Solid', function() {
+				if (old_key == Crafty.keys.A) {
+					this.x = this.x + Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.D) {
+					this.x = this.x - Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.W) {
+					this.y = this.y + Game1.get_tilesize();
+				} else if (old_key == Crafty.keys.S) {
+					this.y = this.y - Game1.get_tilesize();
+				}
+			});
 		Crafty.e('WinTileP1', 'castle_sprite2')
 			.at(tile_value2[0], tile_value2[1])
 			.color('rgb(87, 109, 20)')
@@ -59,6 +117,7 @@ Crafty.scene(
 			.at(tile_value[0], tile_value[1])
 			.color('rgb(87, 109, 20)')
 			.reach();
+
 		this.show_victory = this.bind('EndGame', function(e) {
 			console.log('Player:', e, ' Wins!');
 			Crafty.scene('Victory');
