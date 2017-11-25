@@ -1,4 +1,4 @@
-import pickle, pdb
+import pdb
 from itertools import count
 
 #  local imports 
@@ -14,14 +14,6 @@ class LearningEngine:
     def init_game(self, width, height, obstacles):
         self.env = GameEnv(width, height, obstacles)
         self.env.reset()
-
-    def load_model_weights(self, weights):
-        state_dict = pickle.loads(state_dict)
-        self.model.load_state_dict(state_dict)
-
-    def save_model_weights(self):
-        state_dict = self.model.state_dict()
-        return pickle.dumps(state_dict)
 
     def train_agent(self, nb_episodes):
         for episode_idx in range(nb_episodes):

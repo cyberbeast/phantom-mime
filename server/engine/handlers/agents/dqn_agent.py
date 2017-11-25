@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import torch.nn as nn, torch, torch.optim as optim, torch.nn.functional as F 
 from torch.autograd import Variable
-import random
+import random, pickle
 
 #  from models.basic_model import QNet
 from agents.utils import get_model
@@ -16,12 +16,12 @@ class DQNAgent:
         self.batch_size = batch_size
         
         self.model = get_model(arch_name)
-        self.optimizer = optim.SGD(self.model.parameters())
+        self.optimizer = optim.RMSprop(self.model.parameters())
 
     def load_weights(self, weights):
-        state_dict = pickle.loads(state_dict)
+        state_dict = pickle.loads(weights)
         self.model.load_state_dict(state_dict)
-        self.optimizer = optim.SGD(self.model.parameters())
+        self.optimizer = optim.RMSprop(self.model.parameters())
 
     def save_weights(self):
         state_dict = self.model.state_dict()
