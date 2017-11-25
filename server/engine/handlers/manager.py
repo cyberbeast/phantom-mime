@@ -156,6 +156,7 @@ def init_game(user_key, fbid, mode='train'):
 def launch_training(fbid, learner_name, n_iters=500):
     user_data = client.admin.users.find_one({ 'id': fbid })
     learner = user_data[learner_name]
+    learner.agent.load_weights(user_data[learner_name + '_weights'])
     learner.train_agent(learner, n_iters, learner_name == 'the_rival')
     user_data[learner_name + '_weights'] = learner_name.agent.save_weights()
     client.admin.users.update_one({ 'id': fbid }, { '$set': user_data })

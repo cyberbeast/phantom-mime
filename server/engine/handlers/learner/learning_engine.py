@@ -23,7 +23,7 @@ class LearningEngine:
         self.env = GameEnv(width, height, obstacles)
         self.env.reset()
 
-    def train_agent(self, opponent, nb_episodes):
+    def train_agent(self, opponent, nb_episodes, early_stopping):
         for episode_idx in range(nb_episodes):
             self.env.reset()
             state, reward, done, _ = self.env.step(0, 0)
