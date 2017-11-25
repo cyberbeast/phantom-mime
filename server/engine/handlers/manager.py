@@ -13,30 +13,12 @@ r = redis.Redis(host='redis')
 def ping():
     return "pong"
 
-def _init_learning_engine(user_data, learner_name):
-    print('\nInitializing learning engine. Please wait..')
-    learner = LearningEngine(learner_name)
+def _fast_forward_game(learner, game_meta, moves):
+    for i in range(0, len(moves), 2):
+        user_action, user_turn = moves[i:i+1]
 
-    #  load saved weights if any, store model initial weights otherwise
-    if (learner_name + '_weights') in user_data:
-        rival.agent.load_weights(user_data[learner_name + '_weights'])
-    else:
-        user_data[learner_name + '_weights'] = rival.agent.save_weights()
-
-    user_data[learner_name] = dumps(rival)
-
-    #  randomly generate obstacles 
-    game_width, game_height = int(os.environ['WIDTH']), int(os.environ['HEIGHT'])
-    obstacles = _generate_obstacles(game_width, game_height, 10)
-    player_pos = [ (game_height-1, 0), (0, game_width-1) ]
-    rival.init_game(game_width, game_height, obstacles)
-
-    print('Learning engine initialization complete!\n')
-
-    game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
-                    'player_pos': player_pos ,  'obstacles': obstacles }
-
-    return user_data, game_meta
+        #  get the current state of the game post user action
+        _, _, _, _ = learner.env.step(action_ls.index(user_action), user_turn)
 
 def _generate_obstacles(mx, my, max_removed):
     maze = [[0 for x in range(mx)] for y in range(my)]
@@ -81,7 +63,46 @@ def _generate_obstacles(mx, my, max_removed):
             
     return rock_ls
 
-def next_move(user_key, fbid, mode='train', retry_limit=5):
+def init_learning_engine(fbid, game_key, mode='train', delimiter=':'):
+    print('\nInitializing learning engine. Please wait..')
+    #  get user data from mongodb
+    user_data = client.admin.users.find_one({ 'id': fbid })
+    
+    #  break out if no user data found
+    if user_data is None: return False
+
+    #  get game meta data from session
+    game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
+
+    #  TODO: check if session data is legit
+    game_width, game_height = game_meta['grid_width'], game_meta['grid_height']
+    obstacles = game_meta['obstacles']
+
+    learner_name = 'the_rival' if mode == 'train' else 'mime'
+
+    #  init the learner
+    rival = LearningEngine(learner_name)
+    rival.init_game(game_width, game_height, obstacles)
+
+    #  TODO: fast forward game
+    moves = r.get(game_key + delimiter + 'moves')
+    _fast_forward_game(learner, game_meta, moves)
+
+    #  load saved weights if any, store model initial weights otherwise
+    if (learner_name + '_weights') in user_data:
+        rival.agent.load_weights(user_data[learner_name + '_weights'])
+    else:
+        user_data[learner_name + '_weights'] = rival.agent.save_weights()
+
+    #  save the learner in mongodb for use later
+    user_data[learner_name] = dumps(rival)
+
+    print('Learning engine initialization complete!\n')
+    client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
+
+    return True 
+
+def next_move(game_key, fbid, mode='train', retry_limit=5):
     action_ls = ['up', 'down', 'left', 'right']
     
     #  get learning engine from user data
@@ -90,12 +111,12 @@ def next_move(user_key, fbid, mode='train', retry_limit=5):
 
     while True:
         #  get user's recent action and game turn from session data
-        session_data = r.get(user_key)
-        action, turn = session_data['action'], session_data['turn']
+        moves = r.get(game_key + delimiter + 'moves')
+        user_action, user_turn = moves[0:2]
 
         #  get the current state of the game post user action
         print('\nUpdating game state by user action..')
-        state, _, _, _ = rival.env.step(action_ls.index(user_action), turn)
+        state, _, _, _ = rival.env.step(action_ls.index(user_action), user_turn)
         
         #  make agent choose an action
         print('\nUpdating game state by agent action...')
@@ -112,31 +133,25 @@ def next_move(user_key, fbid, mode='train', retry_limit=5):
             next_state, _, done, _ = rival.env.step(agent_action[0, 0], (turn + 1) % 2)
             retries += 1
 
-        session_data['action'] = action_ls[agent_action[0, 0]]
-        session_data['turn'] = (turn + 1) % 2
+        moves.append([ action_ls[agent_action[0, 0]], (turn + 1) % 2 ])
+        r.set(game_key + delimiter + 'moves')
         status = True
 
         yield status 
 
-def init_game(user_key, fbid, mode='train'):
+def init_game(game_key, delimiter=':'): 
     #  get user status
-    status = r.get(user_key).decode("utf-8")
+    status = r.get(game_key).decode("utf-8")
     if status == 'READY':
-        #  get user data from mongodb
-        user_data = client.admin.users.find_one({ 'id': fbid })
+        #  randomly generate obstacles 
+        game_meta = {}
+        game_meta['grid_width'] = int(os.environ['WIDTH'])
+        game_meta['grid_height'] = int(os.environ['HEIGHT'])
+        game_meta['obstacles'] = _generate_obstacles(game_width, game_height, 10)
+        game_meta['player_pos'] = [ (game_height-1, 0), (0, game_width-1) ]
         
-        #  break out if no user data found
-        if user_data is None: break
-
-        learner_name = 'the_rival' if mode == 'train' else 'mime'
-        user_data, game_meta = _init_learning_engine(user_data, learner_name)
-        
-        client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
-        session_data = {}
-        session_data['game_meta'] = game_meta
-
         # write session data to redis.
-        r.set(user_key, json.dumps(session_data))
+        r.set(game_key + delimiter + 'game_meta', json.dumps(session_data))
 
         # send back game metadata as response
         response_data = {
