@@ -89,7 +89,11 @@ var loungeNamespace = socket => {
 
 	socket.on('challengePlayer', function(data) {
 		console.log(
-			socket.request.session.email + ' wants to challenge ' + data.player
+			socket.request.session.email +
+				':' +
+				socket.id +
+				' wants to challenge ' +
+				data.player
 		);
 	});
 

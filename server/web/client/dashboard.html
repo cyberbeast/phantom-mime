@@ -44,7 +44,7 @@
       });
       $("#members").on("click", '#user', function () {
         var email = $(this).text()
-        var response = email+':'+email2id[$(this).text()]
+        var response = email + ':' + email2id[$(this).text()]
         if (!$(this).hasClass("active")) {
           $("li.active").removeClass("active");
           $(this).addClass("active");
