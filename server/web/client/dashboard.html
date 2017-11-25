@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="assets/css/main.css">
   <script>
     $(function () {
+      var list_users = [];
       console.log("Attempting to connect now...")
       var lounge = io('/lounge')
       console.log('check 1', lounge.connected);
@@ -27,32 +28,60 @@
         data: "from Dashboard"
       })
       lounge.on('memberList', function (msg) {
-        console.log(msg)
-        $('#members').append($('<li>').text(msg));
+        console.log(msg['data'])
+        var users = String(msg['data']).split(',');
+        $('#members').empty();
+        for (var i = 0;i<users.length;i++)
+        { 
+        $('#members').append($('<li class ="list-group-item" id="user"></li>').text(users[i]));
         // window.scrollTo(0, document.body.scrollHeight);
+        }
       });
+      $("#members").on("click",'#user', function(){
+        if (!$(this).hasClass("active")) {
+            // Remove the class from anything that is active
+            $("li.active").removeClass("active");
+            // And make this active
+            $(this).addClass("active");
+        console.log($(this).text());
+        }
     });
+
+
+});
   </script>
 
 </head>
 
 <body>
   <!-- header section -->
-  <section class="banner" role="banner">
+  <section>
 
     <!-- banner text -->
     <div class="container">
       <div class="col-md-10 col-md-offset-1">
-        <div class="banner-text text-center">
+        <div class="text-center">
           <h1>Choose Your Path</h1>
+        </div>
+        </div>
+        <div class = "col-md-6 col-lg-6">
           <a type="button" class="btn btn-primary btn-block" href='/api/game'>Train your AI</a>
-          <a type="button" class="btn btn-primary btn-block" href='/player'>Play against another player</a>
+          
+          </div>
+          <div class = "col-md-6 col-lg-6">
+              <a type="button" class="btn btn-primary btn-block" href=''>Play against another player</a>
+              <ul class="list-group" id ="members">
+
+                </ul>
+          </div>
           <!-- banner text -->
         </div>
-      </div>
+    <div class = "container">
+      
+      <ul id="members"></ul>
     </div>
   </section>
-  <ul id="members"></ul>
+  
 
   <!-- header section -->
   <!-- description text section -->
