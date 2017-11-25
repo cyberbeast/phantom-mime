@@ -36,7 +36,7 @@ def _init_learning_engine(user_data, learner_name):
     game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
                     'player_pos': player_pos ,  'obstacles': obstacles }
 
-    return rival, game_meta
+    return user_data, game_meta
 
 def _generate_obstacles(mx, my, max_removed):
     maze = [[0 for x in range(mx)] for y in range(my)]
@@ -122,15 +122,14 @@ def init_game(user_key, fbid, mode='train'):
     #  get user status
     status = r.get(user_key).decode("utf-8")
     if status == 'READY':
-        
         #  get user data from mongodb
         user_data = client.admin.users.find_one({ 'id': fbid })
         
         #  break out if no user data found
         if user_data is None: break
 
-        learner_type = 'the_rival' if mode == 'train' else 'mime'
-        user_data, game_meta = _init_learning_engine(user_data, learner_type)
+        learner_name = 'the_rival' if mode == 'train' else 'mime'
+        user_data, game_meta = _init_learning_engine(user_data, learner_name)
         
         client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
         session_data = {}
@@ -153,6 +152,14 @@ def init_game(user_key, fbid, mode='train'):
     return {
         "error": "INIT FAILURE"
     }
+
+def launch_training(fbid, learner_name, n_iters=500):
+    user_data = client.admin.users.find_one({ 'id': fbid })
+    learner = user_data[learner_name]
+    learner.train_agent(learner, n_iters, learner_name == 'the_rival')
+    user_data[learner_name + '_weights'] = learner_name.agent.save_weights()
+    client.admin.users.update_one({ 'id': fbid }, { '$set': user_data })
+    return True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

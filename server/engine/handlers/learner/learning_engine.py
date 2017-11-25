@@ -6,16 +6,14 @@ from agents.dqn_agent import DQNAgent
 from games.game_env import GameEnv
 
 class LearningEngine:
-    def __init__(self, learner_type, play_self=False):
+    def __init__(self, learner_type):
         self.agent = DQNAgent(100, 2, 0.3, 0.4)
-        self.opponent = None if play_self else DQNAgent(100, 2, 0.3, 0.4)
         self.env = None
 
         #  set the model for the learning engine depending on
         #  learning type
         if learner_type == 'the_rival':
             self.agent.init_model('qnet')
-            if play_self: self.opponent.init_model('qnet')
         else:
             #  placeholder: replace with proper model name for mime
             self.agent.init_model('qnet')
