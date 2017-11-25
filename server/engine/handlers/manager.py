@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from learner.learning_engine import LearningEngine
 
 client = MongoClient(os.environ['MONGO_HOST'])
+r = redis.Redis(host='redis')
 
 def ping():
     return "pong"
@@ -55,30 +56,29 @@ def _generate_obstacles(mx, my, max_removed):
             
     return rock_ls
 
-def next_move(user_key, retry_limit=5):
+def next_move(user_key, fbid, retry_limit=5):
     action_ls = ['up', 'down', 'left', 'right']
     
-    #  initialize connection to redis
-    r = redis.Redis(host='redis')
-
-    #  get the learner object from the user's store
-    init_user_state = r.get(user_key)
-    learner = loads(init_user_state['learning_engine'])
+    #  get learning engine from user data
+    user_data = client.find_one({ 'id': fbid })
+    learner = user_data['learning_engine']
 
     while True:
-        #  get updated action and turn from user store
-        curr_user_state = r.get(user_key)
-        user_action, turn = curr_user_state['action'], curr_user_state['turn']
+        #  get user's recent action and game turn from session data
+        session_data = r.get(user_key)
+        action, turn = session_data['action'], session_data['turn']
 
         #  get the current state of the game post user action
         print('\nUpdating game state by user action..')
         state, _, _, _ = learner.env.step(action_ls.index(user_action), turn)
         
-        #  make agent choose an action; repeat if chosen action is invalid
+        #  make agent choose an action
         print('\nUpdating game state by agent action...')
         agent_action = learner.agent.select_action(state)
         next_state, _, _, _ = learner.env.step(agent_action[0, 0], (turn + 1) % 2)
         retries = 0
+
+        #  repeat if chosen action is invalid
         while np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
             print('\nUpdating game state by agent action (retry {})...'.format(retries))
             #  agent chooses randomly if too many invalid moves are chosen
@@ -87,9 +87,13 @@ def next_move(user_key, retry_limit=5):
             next_state, _, done, _ = learner.env.step(agent_action[0, 0], (turn + 1) % 2)
             retries += 1
 
-        yield action_ls[agent_action[0, 0]]
+        session_data['action'] = action_ls[agent_action[0, 0]]
+        session_data['turn'] = (turn + 1) % 2
+        status = True
 
-def init_learning_engine(user_key, fbid):
+        yield status 
+
+def _init_learning_engine():
     print('\nInitializing learning engine. Please wait..')
     learner = LearningEngine(os.environ['MODEL_NAME'])
 
@@ -103,21 +107,34 @@ def init_learning_engine(user_key, fbid):
 
     game_meta = { 'grid_height': game_height, 'grid_width': game_width, \
                     'player_pos': player_pos ,  'obstacles': obstacles }
-    r = redis.Redis(host='redis')
+
+    return learner, game_meta
+
+def init_game(user_key, fbid):
+    learner, game_meta = _init_learning_engine()
+
+    #  get user status
     status = r.get(user_key).decode("utf-8")
     if status == 'READY':
-        client.admin.users.update_one({
-            'id': fbid
-        }, {
-            "$set": {
-                'learning_engine': dumps(learner)
-            }
-        })
-        user_state = {}
-        user_state['game_meta'] = game_meta
-        # Write to redis.
-        r.set(user_key, json.dumps(user_state))
-        # Respond to request with dictionary.
+        
+        #  get user data from mongodb
+        user_data = client.admin.users.find_one({ 'id': fbid })
+        
+        #  load saved weights if any, store model initial weights otherwise
+        if 'learned_weights' in user_data:
+            learner.model.load_weights(user_data['learned_weights'])
+        else:
+            user_data['learned_weights'] = learner.model.save_weights()
+        user_data['learning_engine'] = dumps(learner)
+        
+        client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
+        session_data = {}
+        session_data['game_meta'] = game_meta
+
+        # write session data to redis.
+        r.set(user_key, json.dumps(session_data))
+
+        # send back game metadata as response
         response_data = {
             "boardSize": {
                 "width": game_meta['grid_width'],
