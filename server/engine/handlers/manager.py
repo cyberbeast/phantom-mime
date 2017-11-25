@@ -120,11 +120,14 @@ def init_game(user_key, fbid):
         #  get user data from mongodb
         user_data = client.admin.users.find_one({ 'id': fbid })
         
+        #  break out if no user data found
+        if user_data is None: break
+
         #  load saved weights if any, store model initial weights otherwise
         if 'learned_weights' in user_data:
-            learner.model.load_weights(user_data['learned_weights'])
+            learner.load_model_weights(user_data['learned_weights'])
         else:
-            user_data['learned_weights'] = learner.model.save_weights()
+            user_data['learned_weights'] = learner.save_model_weights()
         user_data['learning_engine'] = dumps(learner)
         
         client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
@@ -144,10 +147,10 @@ def init_game(user_key, fbid):
             "obstaclePositions": game_meta['obstacles']
         }
         return response_data
-    else:
-        return {
-            "error": "INIT FAILURE"
-        }
+
+    return {
+        "error": "INIT FAILURE"
+    }
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
