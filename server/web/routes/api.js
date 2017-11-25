@@ -92,6 +92,8 @@ router.get('/dashboard', function(req, res) {
 	if (req.isUnauthenticated()) {
 		res.redirect('/../client/index.html');
 	}
+	req.session.fbid = req.user.id;
+	req.session.email = req.user.email;
 	res.sendFile(path.join(__dirname + '/../client/dashboard.html'));
 });
 
@@ -99,6 +101,9 @@ router.get('/game', function(req, res) {
 	if (req.isAuthenticated()) {
 		req.session.fbid = req.user.id;
 		req.session.email = req.user.email;
+		req.session.gSession = req.query.gameID;
+		req.session.p1 = req.query.player1;
+		req.session.p2 = req.query.player2;
 		res.sendFile(path.join(__dirname + '/../client/game.html'));
 	} else {
 		res.send('ERROR');

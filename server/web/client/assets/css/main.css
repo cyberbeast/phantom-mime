@@ -22,26 +22,8 @@ h1 {
 	font-size: 65px;
 	color: #2d3033;
 }
-h2 {
-	font-size: 40px;
-	color: #2d3033;
-}
-h3 {
-	font-size: 28px;
-	color: #2d3033;
-	font-weight: 300;
-}
-h4 {
-	font-size: 22px;
-	color: #2d3033;
-	font-weight: 400;
-}
-h5 {
-	font-size: 14px;
-	color: #2d3033;
-	text-transform: uppercase;
-	font-weight: 700;
-}
+
+
 .btn {
 	background-color: #3bc492;
 	color: #fff;
@@ -50,6 +32,7 @@ h5 {
 	letter-spacing: 5px;
 	border: 0;
 	padding: 5px;
+	margin-bottom: 0px;
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
 	border-radius: 2px;
@@ -77,6 +60,7 @@ a:hover, a:focus {
 	transition: background-color, color, 0.3s;
 }
 body {
+	background-color: #65349c;
 	font-family: "Roboto", sans-serif;
 	font-weight: 400;
 	color: #6c7279;
@@ -85,20 +69,16 @@ body {
 	Banner
 -------------------------------------------------------------------------------*/
 
-.banner {
-	background-color: #65349c;
-	min-height: 750px;
+h1 {
+	padding-top: 15%;
 }
-.banner-text {
-	padding-top: 28%;
-}
-.banner-text h1 {
+h1 {
 	color: #fff;
 	font-family: "Roboto Slab", sans-serif;
 	font-size: 80px;
 	font-weight: 700;
 }
-.banner-text p {
+.p {
 	color: #fff;
 	font-size: 19px;
 	font-weight: 400;
@@ -117,288 +97,17 @@ body {
 	line-height: 33px;
 	font-weight: 400;
 }
-/* ------------------------------------------------------------------------------
-	Works
--------------------------------------------------------------------------------*/
-.work {
-  -moz-box-shadow: 0 0 0 1px #fff;
-  -webkit-box-shadow: 0 0 0 1px #fff;
-  box-shadow: 0 0 0 1px #fff;
 
-  overflow: hidden;
-  position: relative;
-  visibility: hidden; }
-  .work img
-  {
-	width:100%;
-	height:100%;  
-  }
-  .work .overlay {
-    background: rgba(64, 35, 97, 0.9);
-    height: 100%;
-    left: 0;
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    -moz-transition: opacity, 0.3s;
-    -o-transition: opacity, 0.3s;
-    -webkit-transition: opacity, 0.3s;
-    transition: opacity, 0.3s; }
-  .work .overlay-caption {
-    position: absolute;
-    text-align: center;
-    top: 50%;
-    width: 100%;
-    -moz-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    -webkit-transform: translateY(-50%);
-    transform: translateY(-50%); }
-  .work h5, .work p, .work img {
-    -moz-transition: all, 0.5s;
-    -o-transition: all, 0.5s;
-    -webkit-transition: all, 0.5s;
-    transition: all, 0.5s; }
-  .work h5, .work p {
-    color: #fff;
-    margin: 0;
-    opacity: 0; }
-  .work h5 {
-    margin-bottom: 5px;
-    -moz-transform: translate3d(0, -200%, 0);
-    -ms-transform: translate3d(0, -200%, 0);
-    -webkit-transform: translate3d(0, -200%, 0);
-    transform: translate3d(0, -200%, 0); }
-  .work p {
-    -moz-transform: translate3d(0, 200%, 0);
-    -ms-transform: translate3d(0, 200%, 0);
-    -webkit-transform: translate3d(0, 200%, 0);
-    transform: translate3d(0, 200%, 0); }
-
-.work-box:hover img {
-  -moz-transform: scale(1.2);
-  -ms-transform: scale(1.2);
-  -webkit-transform: scale(1.2);
-  transform: scale(1.2); }
-.work-box:hover .overlay {
-  opacity: 1; }
-  .work-box:hover .overlay h5, .work-box:hover .overlay p {
-    opacity: 1;
-    -moz-transform: translate3d(0, 0, 0);
-    -ms-transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0); }
-	
-	/* ------------------------------------------------------------------------------
-	Work animation
--------------------------------------------------------------------------------*/
-.work:nth-child(1) {
-  -moz-animation-delay: 0.1s;
-  -webkit-animation-delay: 0.1s;
-  animation-delay: 0.1s; }
-.work:nth-child(2) {
-  -moz-animation-delay: 0.2s;
-  -webkit-animation-delay: 0.2s;
-  animation-delay: 0.2s; }
-.work:nth-child(3) {
-  -moz-animation-delay: 0.3s;
-  -webkit-animation-delay: 0.3s;
-  animation-delay: 0.3s; }
-.work:nth-child(4) {
-  -moz-animation-delay: 0.4s;
-  -webkit-animation-delay: 0.4s;
-  animation-delay: 0.4s; }
-.work:nth-child(5) {
-  -moz-animation-delay: 0.8s;
-  -webkit-animation-delay: 0.8s;
-  animation-delay: 0.8s; }
-.work:nth-child(6) {
-  -moz-animation-delay: 0.7s;
-  -webkit-animation-delay: 0.7s;
-  animation-delay: 0.7s; }
-.work:nth-child(7) {
-  -moz-animation-delay: 0.6s;
-  -webkit-animation-delay: 0.6s;
-  animation-delay: 0.6s; }
-.work:nth-child(8) {
-  -moz-animation-delay: 0.5s;
-  -webkit-animation-delay: 0.5s;
-  animation-delay: 0.5s; }
-
-.animated {
-  visibility: visible; }
-  
-/* ------------------------------------------------------------------------------
-	Hire me
--------------------------------------------------------------------------------*/
-.hireme {
-	background-color: #fafafa;
+.ul 
+{
+	color: black;
 }
-.hireme h3 {
-	font-family: "Roboto", sans-serif;
-	font-size: 30px;
-	font-weight: 400;
-	margin-top: 0;
-}
-.hireme p {
-	color: #2d3033;
-	font-family: "Roboto", sans-serif;
-	font-size: 16px;
-	font-weight: 400;
-}
-.hireme .btn {
-	margin-top: 30px;
-}
-/* ------------------------------------------------------------------------------
-	Footer
--------------------------------------------------------------------------------*/
-.footer {
-	text-align: center;
-}
-.footer p {
-	font-family: "Roboto", sans-serif;
-	font-size: 11px;
-	color: #7f7f7f;
-	letter-spacing: 2px;
-	text-transform: uppercase;
-}
-.footer a {
-	color: #7f7f7f;
-}
-.footer a:hover {
-	color: #e84545;
-}
-.footer .footer-share {
-	margin-top: 0;
-}
-.footer .footer-share li {
-	background: #3d3d3d none repeat scroll 0 0;
-	border-radius: 50%;
-	color: #ffffff;
-	width: 26px;
-	height: 26px;
-	border-radius: 50%;
-	padding: 4px 0;
-	margin: 0 5px;
-	display: inline-block;
-	float: none;
-}
-.footer .footer-share a {
+.list-group p{
 	color: #fff;
-}
-.footer .fa-heart {
-	color: #e84545;
-	font-size: 11px;
-	margin: 0 2px;
-}
-  
-/* ------------------------------------------------------------------------------
-	Inner Page Banner
--------------------------------------------------------------------------------*/
-
-.innerbanner {
-	background-color: #65349c;
-	min-height: 100%;
-}
-.innerbanner-text {
-	padding-top: 20%;
-	padding-bottom: 5%;
-}
-
-.innerbanner-text p {
-	color: #fff;
-	font-family: "Roboto Slab", sans-serif;
-	font-size: 36px;
+	font-size: 19px;
 	font-weight: 400;
 	letter-spacing: 3px;
 	line-height: 24px;
 	margin-top: 30px;
 	margin-bottom: 80px;
-}
-/* ------------------------------------------------------------------------------
-	Inner description
--------------------------------------------------------------------------------*/
-.inner-description h1 {
-	color: #3d3d3d;
-	font-size: 23px;
-	font-weight: 700;
-	margin-top:55px;
-}
-.inner-description p {
-	color: #3d3d3d;
-	font-size: 18px;
-	line-height: 33px;
-	font-weight: 400;
-}
-.inner-description img
-{
-width:150px;
-height:150px;
-border-radius:50%;	
-}
-
-
-/* ------------------------------------------------------------------------------
-	Contact form
--------------------------------------------------------------------------------*/
-.conForm
-{
-margin-top:50px;	
-}
-.conForm input {
-	background:#fafafa;
-	color:#797979;
-	padding:15px 30px;
-	border:none;
-	margin-right:3%;
-	margin-bottom:30px;
-	outline:none;
-	font-style:normal;
-	border:#f4f3f3 1px solid;
-	font-size:15px;
-}
-.conForm input.noMarr {
-	margin-right:0px;
-}
-.conForm textarea {
-	background:#fafafa;
-	color:#797979;
-	padding:15px 30px;
-	margin-bottom:18px;
-	outline:none;
-	height:300px;
-	font-style:normal;
-	resize:none;
-	font-size:15px;
-	border:#f4f3f3 1px solid;
-}
-
-
-.conForm .submitBnt {
-	background:#3bc492;
-	color: #fff;
-		padding: 15px 40px;
-	font-size: 13px;
-	font-weight: 600;
-	letter-spacing: 5px;
-	border: 0;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
-	border-radius: 2px;
-	display: inline-block;
-	text-transform: uppercase;
-}
-.conForm .submitBnt:hover {
-	background:#3d3d3d;
-	color:#fff;
-}
-.error_message {
-    color: #ff675f;
-    font-weight: 500;
-    padding-bottom: 15px;
-}
-#success_page h3 {
-    color: #5ed07b;
-    font-size: 17px;
-    font-weight: 700;
 }

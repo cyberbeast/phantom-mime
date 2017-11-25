@@ -16,11 +16,10 @@
       console.log("Establishing socket connection now...");
       var socket = io('/game');
       socket.emit('gameInit', {
-        data: "something"
+        data: "from Game"
       });
 
-      socket.on('message', function (response) {
-
+      socket.on('gameInitResponse', function (response) {
         var data = response['data'];
         console.log(data);
         window.addEventListener('load', Game.start(data));
