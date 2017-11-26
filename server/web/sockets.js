@@ -70,6 +70,7 @@ var gameNamespace = socket => {
 				// Request was successful, use the response object at will
 				// console.log('Sending this out...');
 				// console.log(JSON.stringify(response));
+				// console.log('RESPONSE FOR GAMEINT');
 				// console.log(response);
 				socket.to(socket.request.session.gSession).emit('gameInitResponse', {
 					event: 'gameInit',
@@ -156,7 +157,10 @@ var loungeNamespace = socket => {
 		});
 
 		socket.on('disconnect', function() {
-			client.SREM('loungeMembers', [socket.request.session.email]);
+			client.SREM(
+				'loungeMembers',
+				socket.request.session.email + ':' + socket.id
+			);
 			console.log(socket.request.sessionID + ' has disconnected from LOUNGE!');
 			client.smembers('loungeMembers', function(err, reply) {
 				console.log(reply);

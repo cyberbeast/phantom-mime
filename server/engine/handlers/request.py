@@ -1,6 +1,5 @@
 import hug
 from handlers.manager import next_move, init_game, init_learning_engine
-import logging
 import redis
 
 # logging.basicConfig(level=logging.INFO)
