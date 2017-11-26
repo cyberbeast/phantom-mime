@@ -10,10 +10,11 @@
   <script src="../client/assets/js/game_grid.js"></script>
   <script>
     console.log('Loading game...');
-    var data = 6;
 
     $(function () {
-      var pObject
+      var turn_local = 'Player1';
+      var gameid_local = null;
+      //var pObject
       console.log("Establishing socket connection now...");
       var socket = io('/game');
       var myIdentity;
@@ -27,21 +28,46 @@
       });
 
       socket.on('gameInitResponse', function (data) {
-        console.log(data);
+        // console.log(data);
         data.identity = myIdentity
         Game.start(socket, data);
-        pObject = Game.create_players();
-
+        gameid_local = Game.create_players();
+        console.log("From game.js: ", turn_local)
       })
-      $(document).keydown(function (e) {
-        console.log(myIdentity, typeof (myIdentity))
-        if (myIdentity === pObject.p1.identity) {
-          Game.move(pObject.p1, e.keyCode);
-        } else {
-          Game.move(pObject.p2, e.keyCode);
-        }
 
+      socket.on('newMove', function (data) {
+        //get player in previous turn
+        var prev_turn = data['player'] === 'Player1' ? 'Player2' : 'Player1';
+        var prev_player = Crafty(prev_turn);
+        //render their move
+        Game.move(prev_player, data['move']);
+        //toggle the turn again
+        turn_local = data['player'];
+        console.log('After rendering move:', turn_local);
       });
+
+      $(document).keydown(function (e) {
+        console.log(turn_local)
+        //get player entity whose turn it is
+        var current_player = Crafty(turn_local);
+        //render move if the current use is the current player
+        if (myIdentity === current_player.identity) {
+          Game.move(current_player, e.keyCode);
+          //toggle turn after move is rendered
+          turn_local = turn_local === 'Player1' ? 'Player2' : 'Player1';
+          //emit to other player recent move
+          socket.emit('gameServerListener', {
+            event: 'newMove',
+            data: {
+              player: turn_local,
+              move: e.keyCode,
+              game: gameid_local
+
+            }
+          });
+        }
+      });
+
       socket.on('success', function (data) {
         console.log("REGISTERED with: " + data)
       })

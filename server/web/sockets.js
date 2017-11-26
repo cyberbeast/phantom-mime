@@ -49,6 +49,7 @@ var gameNamespace = socket => {
 		console.log('GAME sent something');
 		switch (payload.event) {
 			case 'newMove':
+				console.log('Responding to newMove');
 				socket.to(payload.data.game).emit(payload.event, {
 					player: payload.data.player,
 					move: payload.data.move
