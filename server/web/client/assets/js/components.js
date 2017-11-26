@@ -42,14 +42,13 @@ Crafty.c('Player1', {
 		var old_key = null;
 		this.requires('Actor, Fourway, Color, Collision')
 			.color('rgb(20, 75, 25)')
-			.collision()
+			.collision();
 	}
 });
 Crafty.c('Player2', {
 	init: function() {
 		var old_key = null;
-		this.requires('Actor, Fourway, Color, Collision')
-			.color('rgb(255, 25, 25)')
+		this.requires('Actor, Fourway, Color, Collision').color('rgb(255, 25, 25)');
 	}
 });
 

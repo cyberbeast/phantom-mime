@@ -2,6 +2,8 @@ const redis = require('redis'),
 	config = require('./config'),
 	request = require('request-promise');
 
+const ioImport = require('./index').sendToGame;
+
 const client = redis.createClient({
 	host: config.redis.host,
 	port: config.redis.port
@@ -22,15 +24,48 @@ var gameNamespace = socket => {
 	// }
 
 	// if (currentConnection == p1 || currentConnection == p2) {
-	socket.join(socket.request.session.gSession, function(something) {
-		console.log('JOIN STATUS: ' + something);
+
+	socket.emit('yourIdentity', socket.request.sessionID);
+	socket.join(socket.request.session.gSession, function() {
+		console.log(
+			socket.request.session.email +
+				' with id ' +
+				socket.request.sessionID +
+				' has joined!' +
+				socket.request.session.gSession
+		);
+
+		ioImport(
+			socket.request.session.gSession,
+			'success',
+			socket.request.session.email
+		);
+		// socket
+		// 	.to(socket.request.session.gSession)
+		// 	.emit('success', socket.request.session.email);
 	});
-	// }
+
+	socket.on('gameServerListener', function(payload) {
+		console.log('GAME sent something');
+		switch (payload.event) {
+			case 'newMove':
+				socket.to(payload.data.game).emit(payload.event, {
+					player: payload.data.player,
+					move: payload.data.move
+				});
+		}
+	});
 
 	// console.log(socket.request.session);
 	if (socket.request.sessionID !== undefined) {
 		// if (!viewerOnly) {
-		console.log(socket.request.sessionID + ' has joined!');
+		// console.log(
+		// 	socket.request.session.email +
+		// 		' with id ' +
+		// 		socket.request.sessionID +
+		// 		' has joined!' +
+		// 		socket.request.session.gSession
+		// );
 		// console.log('FB ID IS: ' + socket.request.session.fbid);
 		client.set(socket.request.sessionID, 'READY');
 		// }
@@ -72,10 +107,11 @@ var gameNamespace = socket => {
 				// console.log(JSON.stringify(response));
 				// console.log('RESPONSE FOR GAMEINT');
 				// console.log(response);
-				socket.to(socket.request.session.gSession).emit('gameInitResponse', {
-					event: 'gameInit',
-					data: response
-				});
+				// socket.send('gameInitResponse', {
+				// 	event: 'gameInit',
+				// 	data: response
+				// });
+				ioImport(socket.request.session.gSession, 'gameInitResponse', response);
 			})
 			.catch(function(err) {
 				// Something bad happened, handle the error
