@@ -157,7 +157,10 @@ def init_game(game_key, delimiter=':'):
             r.set(game_key + delimiter + 'game_meta', json.dumps(game_meta))
         else:
             game_meta = json.loads(game_meta)
-            
+
+        print("LOOK HERE FOR: " + game_key)
+        print(game_meta)
+
         # send back game metadata as response
         response_data = {
             "boardSize": {
