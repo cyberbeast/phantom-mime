@@ -74,10 +74,16 @@ Game = {
 		var gameid = getUrlParameter('gameID');
 		var player1Token = getUrlParameter('player1');
 		var player2Token = getUrlParameter('player2');
-		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
+		Crafty.sprite('assets/sprites/player1_50x50.png', {
+			player1sprite: [0, 0, 50, 50]
+		});
+		Crafty.sprite('assets/sprites/player2_50x50.png', {
+			player2sprite: [0, 0, 50, 50]
+		});
+		var player1 = Crafty.e('Player1','player1sprite').at(tile_value[0], tile_value[1]).color('rgb(87, 109, 20)');
 		// player1.setName('player1');
 		player1.identity = player1Token;
-		var player2 = Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
+		var player2 = Crafty.e('Player2','player2sprite').at(tile_value2[0], tile_value2[1]).color('rgb(87, 109, 20)');
 		// player2.setName('player2');
 		player2.identity = player2Token;
 		player1
