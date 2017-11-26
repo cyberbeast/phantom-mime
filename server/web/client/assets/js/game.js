@@ -17,15 +17,16 @@ var moves = function(data) {
 		old_key = key;
 	}
 };
-var hits = function() {
+var hits = function(player) {
+	console.log(old_key);
 	if (old_key == Crafty.keys.LEFT_ARROW) {
-		this.x = this.x + Game1.get_tilesize();
+		player.x = player.x + Game1.get_tilesize();
 	} else if (old_key == Crafty.keys.RIGHT_ARROW) {
-		this.x = this.x - Game1.get_tilesize();
+		player.x = player.x - Game1.get_tilesize();
 	} else if (old_key == Crafty.keys.UP_ARROW) {
-		this.y = this.y + Game1.get_tilesize();
+		player.y = player.y + Game1.get_tilesize();
 	} else if (old_key == Crafty.keys.DOWN_ARROW) {
-		this.y = this.y - Game1.get_tilesize();
+		player.y = player.y - Game1.get_tilesize();
 	}
 };
 
@@ -83,13 +84,15 @@ Game = {
 			.bind('move', function(data) {
 				moves(data);
 			})
-			.onHit('Solid', hits());
+			.onHit('Solid', function() {
+				hits(this);
+			});
 		player2
 			.bind('move', function(data) {
 				moves(data);
 			})
 			.onHit('Solid', function() {
-				hits();
+				hits(this);
 			});
 		return gameid;
 	}
