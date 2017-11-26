@@ -13,17 +13,37 @@
     var data = 6;
 
     $(function () {
+      var pObject
       console.log("Establishing socket connection now...");
       var socket = io('/game');
+      var myIdentity;
+
+      socket.on('yourIdentity', function (data) {
+        myIdentity = data
+      })
+
       socket.emit('gameInit', {
         data: "from Game"
       });
 
-      socket.on('gameInitResponse', function (response) {
-        var data = response['data'];
+      socket.on('gameInitResponse', function (data) {
         console.log(data);
-        window.addEventListener('load', Game.start(data));
-        console.log("womp womp");
+        data.identity = myIdentity
+        Game.start(socket, data);
+        pObject = Game.create_players();
+
+      })
+      $(document).keydown(function (e) {
+        console.log(myIdentity, typeof (myIdentity))
+        if (myIdentity === pObject.p1.identity) {
+          Game.move(pObject.p1, e.keyCode);
+        } else {
+          Game.move(pObject.p2, e.keyCode);
+        }
+
+      });
+      socket.on('success', function (data) {
+        console.log("REGISTERED with: " + data)
       })
     });
   </script>

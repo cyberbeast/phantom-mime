@@ -1,3 +1,18 @@
+var getUrlParameter = function getUrlParameter(sParam) {
+	var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+		sURLVariables = sPageURL.split('&'),
+		sParameterName,
+		i;
+
+	for (i = 0; i < sURLVariables.length; i++) {
+		sParameterName = sURLVariables[i].split('=');
+
+		if (sParameterName[0] === sParam) {
+			return sParameterName[1] === undefined ? true : sParameterName[1];
+		}
+	}
+};
+
 Crafty.scene(
 	'Game',
 	function() {
@@ -5,6 +20,15 @@ Crafty.scene(
 		var tile_value = positions[0];
 		var tile_value2 = positions[1];
 		var rocks = Game1.get_obstaclePosition();
+		var socket = Game1.getsocket();
+		var url = window.location.href;
+		console.log(url);
+		var gameid = getUrlParameter('gameID');
+		var player1Token = getUrlParameter('player1');
+		var player2Token = getUrlParameter('player2');
+		console.log(gameid);
+		console.log(player1Token);
+		console.log(player2Token);
 		Crafty.sprite('assets/sprites/castle1_50x50.gif', {
 			castle_sprite: [0, 0, 50, 50]
 		});
@@ -48,97 +72,83 @@ Crafty.scene(
 			}
 		}
 		// Player entities
-		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
-		var player2 = Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
 
+		// data : {
+		// 	player: "player1",
+		// 	move: "left"
+		// }
 
-		player1.bind('turn', function(e) {
-			if (e.key == Crafty.keys.LEFT_ARROW) {
-				this.x = this.x - Game1.get_tilesize();
-				old_key = e.key;
-			} else if (e.key == Crafty.keys.RIGHT_ARROW) {
-				this.x = this.x + Game1.get_tilesize();
-				old_key = e.key;
-			} else if (e.key == Crafty.keys.UP_ARROW) {
-				this.y = this.y - Game1.get_tilesize();
-				old_key = e.key;
-			} else if (e.key == Crafty.keys.DOWN_ARROW) {
-				this.y = this.y + Game1.get_tilesize();
-				old_key = e.key;
-			}}).onHit('Solid', function() {
-				if (old_key == Crafty.keys.LEFT_ARROW) {
-					this.x = this.x + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.RIGHT_ARROW) {
-					this.x = this.x - Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.UP_ARROW) {
-					this.y = this.y + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.DOWN_ARROW) {
-					this.y = this.y - Game1.get_tilesize();
-				}
-			});
+		// socket.on('newMove', function(data) {
+		// 	console.log('NEW MOVE: ' + data.move);
+		// 	var player = data.player;
+		// 	var move = data.move;
 
+		// 	if (Game1.getMyIdentity() == turn.identity) {
+		// 		turn.trigger('move', move);
+		// 		if (turn.getName() == 'player1') {
+		// 			turn = player2;
+		// 		} else {
+		// 			turn = player1;
+		// 		}
+		// 	}
+		// });
 
-		player1.bind('KeyDown',function(e)
-	{
-		player1.trigger('turn',e);
-	});
+		// turn.bind('KeyDown', function(e) {
+		// 	console.log(
+		// 		'I am ' + Game1.getMyIdentity() + '. TURN is: ' + turn.identity
+		// 	);
+		// 	if (Game1.getMyIdentity() == turn.identity) {
+		// 		console.log('YAYY MY TURM');
+		// 		turn.trigger('move', e.key);
+		// 		if (turn.getName() == 'player1') {
+		// 			console.log('Switching to player2');
+		// 			turn = player2;
+		// 			console.log('TURN should be: ' + turn.identity);
+		// 		} else {
+		// 			turn = player1;
+		// 		}
+		// 		socket.emit('gameServerListener', {
+		// 			event: 'newMove',
+		// 			data: {
+		// 				game: gameid,
+		// 				player1: player1Token,
+		// 				player2: player2Token,
+		// 				player: turn,
+		// 				move: e.key
+		// 			}
+		// 		});
+		// 	}
+		// });
 
-
-		player2.bind('KeyDown', function(e) {
-				if (e.key == Crafty.keys.A) {
-					this.x = this.x - Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.D) {
-					this.x = this.x + Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.W) {
-					this.y = this.y - Game1.get_tilesize();
-					old_key = e.key;
-				} else if (e.key == Crafty.keys.S) {
-					this.y = this.y + Game1.get_tilesize();
-					old_key = e.key;
-				}
-			})
-			.onHit('Solid', function() {
-				if (old_key == Crafty.keys.A) {
-					this.x = this.x + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.D) {
-					this.x = this.x - Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.W) {
-					this.y = this.y + Game1.get_tilesize();
-				} else if (old_key == Crafty.keys.S) {
-					this.y = this.y - Game1.get_tilesize();
-				}
-			});
 		Crafty.e('WinTileP1', 'castle_sprite2')
 			.at(tile_value2[0], tile_value2[1])
 			.color('rgb(87, 109, 20)')
 			.reach();
-        Crafty.e('WinTileP2', 'castle_sprite')
-            .at(tile_value[0], tile_value[1])
-            .color('rgb(87, 109, 20)')
-            .reach();
-        this.show_victory = this.bind('EndGame', function(e) {
-            console.log('Player:', e, ' Wins!');
-            Crafty.scene('Victory');
-        });
-    },
-    function() {
-        this.unbind('EndGame');
-    }
+		Crafty.e('WinTileP2', 'castle_sprite')
+			.at(tile_value[0], tile_value[1])
+			.color('rgb(87, 109, 20)')
+			.reach();
+		this.show_victory = this.bind('EndGame', function(e) {
+			console.log('Player:', e, ' Wins!');
+			Crafty.scene('Victory');
+		});
+	},
+	function() {
+		this.unbind('EndGame');
+	}
 );
 Crafty.scene(
-    'Victory',
-    function() {
-        // Display some text in celebration of the victory
-        Crafty.e('2D, DOM, Text')
-            .attr({ x: 15, y: 15 })
-            .text('Victory!');
-        //this.restart_game = this.bind('KeyDown', function() {
-        //  Crafty.scene('Game');
-        //});
-    },
-    function() {
-        this.unbind('KeyDown');
-    }
+	'Victory',
+	function() {
+		// Display some text in celebration of the victory
+		Crafty.e('2D, DOM, Text')
+			.attr({ x: 15, y: 15 })
+			.text('Victory!');
+		//this.restart_game = this.bind('KeyDown', function() {
+		//  Crafty.scene('Game');
+		//});
+	},
+	function() {
+		this.unbind('KeyDown');
+	}
 );
