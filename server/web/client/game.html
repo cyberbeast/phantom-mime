@@ -47,6 +47,15 @@
 						handleGameEnd(prev_player, false);
 						turn_local = data['player'];
 						break;
+					
+					case 'endGameAcknowledged':
+						console.log('Server acknowledged endGame. Redirecting user to /dashboard in 5 seconds')
+						// START TIMER HERE
+						break;
+					
+					case 'mimeTrainStarted':
+						console.log('Game saved for learning. Mime is now learning! :)')
+						break;
 				}
 			})
 

@@ -28,6 +28,12 @@ def nextMove(key, mode):
     r.set(key + ':learning_engine', dumps(rival))
     return response
 
+@hug.get("/trainMime")
+def trainMime(fbid):
+    # 
+    return True
+
+
 @hug.get("/gameInit")
 def gameInit(key, fbid, gameMode="PvP" ):
     # Possible Modes are: "PvP", "PvAI", "trainAI"

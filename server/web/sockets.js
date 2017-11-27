@@ -40,11 +40,7 @@ var gameNamespace = socket => {
 				socket.request.session.gSession
 		);
 
-		ioImport(
-			socket.request.session.gSession,
-			'success',
-			socket.request.session.email
-		);
+		ioImport(socket.request.session.gSession, 'success', socket.request.session.email);
 		// socket
 		// 	.to(socket.request.session.gSession)
 		// 	.emit('success', socket.request.session.email);
@@ -56,8 +52,7 @@ var gameNamespace = socket => {
 			case 'newMove':
 				console.log('Gman is sending', payload.data);
 				console.log('GSESSION', socket.request.session.gSession);
-				var log_currentPlayer =
-					payload.data.player === 'Player1' ? 'Player2' : 'Player1';
+				var log_currentPlayer = payload.data.player === 'Player1' ? 'Player2' : 'Player1';
 				client.lpush(
 					payload.data.game + ':moves',
 					log_currentPlayer + ':' + String(payload.data.move),
@@ -70,11 +65,7 @@ var gameNamespace = socket => {
 				if (payload.data.mode === 'trainAI') {
 					var options = {
 						method: 'GET',
-						uri:
-							config.engine.host +
-							':' +
-							config.engine.port +
-							config.engine.nextMoveRoute,
+						uri: config.engine.host + ':' + config.engine.port + config.engine.nextMoveRoute,
 						qs: {
 							key: socket.request.session.gSession,
 							fbid: socket.request.session.fbid,
@@ -88,10 +79,7 @@ var gameNamespace = socket => {
 							console.log('HAVE response');
 							if (response === true) {
 								console.log('INSIDE here');
-								client.lindex(payload.data.game + ':moves', 0, function(
-									err,
-									reply
-								) {
+								client.lindex(payload.data.game + ':moves', 0, function(err, reply) {
 									console.log('ENGINE response on REDIS ', reply);
 									var val = reply.split(' ');
 									socket.send({
@@ -106,9 +94,7 @@ var gameNamespace = socket => {
 						.catch(function(err) {
 							// Something bad happened, handle the error
 							console.log('API: Search failed', err);
-							socket
-								.to(socket.request.session.gSession)
-								.emit('gameInitResponse', err);
+							socket.to(socket.request.session.gSession).emit('gameInitResponse', err);
 						});
 				} else {
 					console.log('Responding to newMove');
@@ -134,21 +120,35 @@ var gameNamespace = socket => {
 					gameID: socket.request.session.gSession,
 					winner: payload.data.winner,
 					game_meta: client.get(socket.request.session.gSession + ':game_meta'),
-					moves: client.lrange(
-						socket.request.session.gSession + ':moves',
-						0,
-						-1
-					)
+					moves: client.lrange(socket.request.session.gSession + ':moves', 0, -1)
 				};
-
+				var pushObject;
+				if (payload.data.mode === 'trainAI') {
+					var pushObject = { trainAI_games: writeObject };
+					var qs = {
+						fbid: socket.request.session.fbid
+					};
+					engineRequest(qs, config.engine.trainMimeRoute, function(res) {
+						console.log(config.trainMimeRoute, qs, res);
+						socket.send({ event: 'mimeTrainStarted' });
+					});
+				} else {
+					var pushObject = { player_games: writeObject };
+				}
 				User.findOneAndUpdate(
 					{ id: String(socket.request.session.fbid) },
-					{ $push: { player_games: writeObject } },
+					{ $push: pushObject },
 					{ safe: true, upsert: true, new: true },
 					function(err, reply) {
 						if (err) throw err;
 					}
 				);
+
+				// Tell client that endGame was successfully handled by server.
+				// Client will set a 5 second timer, at the end of which client will redirect the player to /dashboard.
+				socket.send({
+					event: 'endGameAcknowledged'
+				});
 				break;
 		}
 	});
@@ -185,11 +185,7 @@ var gameNamespace = socket => {
 		console.log('REC: ' + JSON.stringify(data));
 		var options = {
 			method: 'GET',
-			uri:
-				config.engine.host +
-				':' +
-				config.engine.port +
-				config.engine.gameInitRoute,
+			uri: config.engine.host + ':' + config.engine.port + config.engine.gameInitRoute,
 			qs: {
 				key: socket.request.session.gSession
 				// fbid: socket.request.session.fbid
@@ -216,10 +212,7 @@ var gameNamespace = socket => {
 				// 	event: 'gameInit',
 				// 	data: response
 				// });
-				client.lpush(
-					socket.request.session.gSession + ':moves',
-					'READY -> ' + socket.request.sessionID
-				);
+				client.lpush(socket.request.session.gSession + ':moves', 'READY -> ' + socket.request.sessionID);
 				if (socket.request.session.gameMode === 'trainAI') {
 					socket.send({
 						event: 'trainAIGameInitResponse',
@@ -227,28 +220,37 @@ var gameNamespace = socket => {
 						response: response
 					});
 				} else {
-					ioImport(
-						socket.request.session.gSession,
-						'gameInitResponse',
-						response
-					);
+					ioImport(socket.request.session.gSession, 'gameInitResponse', response);
 				}
 			})
 			.catch(function(err) {
 				// Something bad happened, handle the error
 				console.log('API: Search failed', err);
-				socket
-					.to(socket.request.session.gSession)
-					.emit('gameInitResponse', err);
+				socket.to(socket.request.session.gSession).emit('gameInitResponse', err);
 			});
 		// }
 	});
 };
 
+function engineRequest(qs, route, cb) {
+	var options = {
+		method: 'GET',
+		uri: config.engine.host + ':' + config.engine.port + config.engine.route,
+		qs: qs,
+		json: true
+	};
+	request(options)
+		.then(function(response) {
+			cb(response);
+		})
+		.catch(function(err) {
+			console.log('err');
+			cb(err);
+		});
+}
+
 var loungeNamespace = socket => {
-	console.log(
-		'Session in LOUNGE' + JSON.stringify(socket.request.session.email)
-	);
+	console.log('Session in LOUNGE' + JSON.stringify(socket.request.session.email));
 
 	var del = false;
 
@@ -267,9 +269,7 @@ var loungeNamespace = socket => {
 		socket.on('checkIn', function(data) {
 			console.log(socket.request.session);
 			socket.emit('sessID', socket.request.sessionID);
-			client.sadd('loungeMembers', [
-				socket.request.session.email + ':' + socket.id
-			]);
+			client.sadd('loungeMembers', [socket.request.session.email + ':' + socket.id]);
 			client.smembers('loungeMembers', function(err, reply) {
 				console.log(reply);
 				socket.emit('memberList', { data: reply });
@@ -278,13 +278,7 @@ var loungeNamespace = socket => {
 		});
 
 		socket.on('challengePlayer', function(data) {
-			console.log(
-				socket.request.session.email +
-					':' +
-					socket.id +
-					' wants to challenge ' +
-					data.player
-			);
+			console.log(socket.request.session.email + ':' + socket.id + ' wants to challenge ' + data.player);
 			var extract = data.player.split(':');
 			console.log(extract);
 			socket.to(extract[1]).emit('newChallengeRequest', {
@@ -292,19 +286,11 @@ var loungeNamespace = socket => {
 				challengerID: socket.id,
 				challengerUID: '&player1=' + socket.request.sessionID,
 				challengeeID: extract[1],
-				gSession:
-					'?gameID=' +
-					socket.id.replace('/lounge#', '') +
-					extract[1].replace('/lounge#', '')
+				gSession: '?gameID=' + socket.id.replace('/lounge#', '') + extract[1].replace('/lounge#', '')
 			});
 		});
 		socket.on('trainAI', function() {
-			console.log(
-				socket.request.session.email +
-					':' +
-					socket.id +
-					' wants to train his/her AI agent.'
-			);
+			console.log(socket.request.session.email + ':' + socket.id + ' wants to train his/her AI agent.');
 			var gSession = '?gameID=' + socket.id.replace('/lounge#', '');
 			var player = '&player1=' + socket.request.sessionID;
 			var mode = '&mode=trainAI';
@@ -317,19 +303,13 @@ var loungeNamespace = socket => {
 				var temp = data;
 				temp.payload.challengeeUID = '&player2=' + socket.request.sessionID;
 				socket.to(temp.payload.challengerID).emit('challengeAccepted', {
-					redirectParam:
-						temp.payload.gSession +
-						temp.payload.challengerUID +
-						temp.payload.challengeeUID
+					redirectParam: temp.payload.gSession + temp.payload.challengerUID + temp.payload.challengeeUID
 				});
 			}
 		});
 
 		socket.on('disconnect', function() {
-			client.SREM(
-				'loungeMembers',
-				socket.request.session.email + ':' + socket.id
-			);
+			client.SREM('loungeMembers', socket.request.session.email + ':' + socket.id);
 			console.log(socket.request.sessionID + ' has disconnected from LOUNGE!');
 			client.smembers('loungeMembers', function(err, reply) {
 				console.log(reply);
