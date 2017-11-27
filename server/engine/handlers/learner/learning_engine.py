@@ -1,7 +1,10 @@
-import matplotlib, io, base64, pdb
+import logging, matplotlib, io, base64, pdb
+matplotlib.use('Agg')
+
+
+import matplotlib.pyplot as plt, seaborn as sns
 from itertools import count
 
-import logging
 logger = logging.getLogger(__name__)
 
 #  local imports 
@@ -64,7 +67,7 @@ class LearningEngine:
                 
                 if done: break
 
-    def train_agent(self, opponent, nb_episodes):
+    def train_agent(self, opponent, nb_episodes, plot_performance=False):
         avg_reward_ls = []
 
         for episode_idx in range(nb_episodes):
@@ -104,3 +107,14 @@ class LearningEngine:
             avg_reward_ls.append(total_reward / num_plies)
 
         #  TODO: plot training performance
+        if plot_performance:
+            img = io.BytesIO()
+            _, ax = plt.subplots()
+            sns.tsplot(time=list(range(nb_episodes)), data=avg_reward_ls, condition='Training Loss', legend='True', ax=ax)
+            ax.set_xlabel('Games')
+            ay.set_ylabel('Average Reward')
+            plt.savefig(img, format='png')
+            img.seek(0)
+            return base64.b64encode(img.getvalue()).decode()
+        else:
+            return None

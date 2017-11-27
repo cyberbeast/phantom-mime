@@ -164,7 +164,9 @@ def launch_training(fbid, learner_name, n_iters=1000):
         learner.train_mime(opposing_engine.agent, moves[1:], 500)
     else:
         # train the learning engine's agent
-        learner.train_agent(learner.agent, n_iters, learner_name == 'the_rival')
+        result = learner.train_agent(learner.agent, n_iters) 
+        if result is not None:
+            user_data[learner_name + '_plots'] = result
 
     learner.env.reset()
 
