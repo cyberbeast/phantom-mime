@@ -26,15 +26,15 @@ class LearningEngine:
         self.env = GameEnv(width, height, obstacles)
         self.env.reset()
 
-    def train_agent(self, opponent, nb_episodes, early_stopping):
+    def train_agent(self, opponent, nb_episodes, play_self):
         for episode_idx in range(nb_episodes):
             # logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
             self.env.reset()
             state, reward, done, _ = self.env.step(0, 1)
 
-            max_plies = 500
+            max_plies = 30
             #  play the game
-            for step_idx in count():
+            for step_idx in count(1):
 
                 # break out of game if too many turns and no one has won
                 if step_idx > max_plies: break
@@ -54,6 +54,7 @@ class LearningEngine:
                 state = next_state
 
                 # Perform one step of the optimization (on the target network)
-                current_agent.optimize()
+                if play_self or step_idx % 2 == 0:
+                    current_agent.optimize()
                 
                 if done: break

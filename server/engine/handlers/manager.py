@@ -76,7 +76,7 @@ def init_learning_engine(fbid, game_key, mode, delimiter=':'):
     #  break out if no user data found
     if user_data is None: return False
 
-    #  TODO: check if session data is legit
+    #  check if session data is legit
     if r.exists(game_key + delimiter + 'game_meta') == 0: return False
 
     #  get game meta data from session
@@ -149,12 +149,27 @@ def init_game(game_key, delimiter=':'):
         "error": "INIT FAILURE"
     }
 
-def launch_training(fbid, learner_name, n_iters=500):
+def launch_training(fbid, learner_name, n_iters=1000):
+    # load the primary learning engine
     user_data = client.admin.users.find_one({ 'id': fbid })
     learner = loads(user_data[learner_name])
     learner.agent.load_weights(user_data[learner_name + '_weights'])
-    learner.train_agent(learner.agent, n_iters, learner_name == 'the_rival')
+    
+    # load appropriate opposing engine
+    if learner_name == 'mime':
+        # opposing_learner = loads(user_data['the_rival'])
+        # opposing_learner.agent.load_weights(user_data['the_rival_weights']) 
+        # opponent = opposing_learner.agent
+        opponent = None
+        # TODO: fetch game history from user data (mongo)
+    else:
+        opponent = learner.agent
+    
+    # train the learning engine's agent
+    learner.train_agent(opponent, n_iters, learner_name == 'the_rival')
     learner.env.reset()
+
+    # dump the learnt weights to user data(mongo)
     user_data[learner_name + '_weights'] = learner.agent.save_weights()
     client.admin.users.update_one({ 'id': fbid }, { '$set': user_data })
     return True

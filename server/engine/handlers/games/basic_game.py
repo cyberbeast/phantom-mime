@@ -21,16 +21,13 @@ class BasicGame:
         return grid.cpu().numpy()[:, : 0, height - 1] == 2 \
                 or grid.cpu().numpy()[:, :, width-1, 0] == 1 
 
-    def calc_reward(self, state, next_state, turn):
+    def calc_reward(self, state, next_state):
         if self.is_game_finished(next_state):
-            return 10
+            return 0
         elif np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
+            return -3
+        else:            
             return -1
-        else:
-            _, _, curr_y, curr_x = np.where( state ==  turn )
-            # _, _, dest_y, dest_x = np.where( state ==  turn )
-            
-            return 2
         
 
     def process_action(self, grid, action, turn):
