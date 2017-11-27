@@ -1,11 +1,29 @@
 class grid {
-	constructor(data) {
+	constructor(socket, data) {
+		console.log('Data recieved in grid', data);
 		this.mapGridWidth = data['boardSize']['width'] + 2;
 		this.mapGridHeight = data['boardSize']['height'] + 2;
 		this.playerPositions = data['playerPositions'];
 		this.obstaclePositions = data['obstaclePositions'];
 		this.tileWidth = 50;
 		this.tileHeight = 50;
+		this.socket = socket;
+		this.myIdentity = data.identity;
+		this.winner = null;
+		this.loser = null;
+
+		// mutating server game grid to client game grid
+		this.playerPositions[1] = [
+			this.playerPositions[1][0] + 1,
+			this.playerPositions[1][1] + 1
+		];
+		this.playerPositions[0] = [
+			this.playerPositions[0][0] + 1,
+			this.playerPositions[0][1] + 1
+		];
+		var temp = this.playerPositions[0];
+		this.playerPositions[0] = this.playerPositions[1];
+		this.playerPositions[1] = temp;
 	}
 	get_gridwidth() {
 		return this.mapGridWidth;
@@ -32,15 +50,23 @@ class grid {
 
 		return this.obstaclePositions;
 	}
+
+	getMyIdentity() {
+		return this.myIdentity;
+	}
+
 	get_playerPosition() {
-		this.playerPositions[1] = [
-			this.playerPositions[1][0] + 1,
-			this.playerPositions[1][1] + 1
-		];
-		this.playerPositions[0] = [
-			this.playerPositions[0][0] + 1,
-			this.playerPositions[0][1] + 1
-		];
-		return [this.playerPositions[1], this.playerPositions[0]];
+		return [this.playerPositions[0], this.playerPositions[1]];
+	}
+	getsocket() {
+		return this.socket;
+	}
+	set_win(winner, loser) {
+		this.winner = winner;
+		this.loser = loser;
+	}
+	getwinner(winner, loser) {
+		console.log(this.winner, this.loser);
+		return [this.winner, this.loser];
 	}
 }

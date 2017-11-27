@@ -73,6 +73,10 @@ game.on('connection', sockets.gameNamespace);
 var lounge = io.of('/lounge');
 lounge.on('connection', sockets.loungeNamespace);
 
+export function sendToGame(room, event, data) {
+	game.to(room).emit(event, data);
+}
+
 app.use(sessionMiddleware);
 app.use((req, res, next) => {
 	console.log(`From Express: ${req.sessionID}`);

@@ -1,6 +1,5 @@
 import hug
-from handlers.manager import next_move, init_learning_engine
-import logging
+from handlers.manager import next_move, init_game, init_learning_engine
 import redis
 
 # logging.basicConfig(level=logging.INFO)
@@ -16,6 +15,9 @@ def nextmove():
     return 'nextMove'
 
 @hug.get("/gameInit")
-def gameInit(key, fbid):
-    response = init_learning_engine(key, fbid)
+def gameInit(key):
+    # print("KEY IS: " + key)
+    response = init_game(key)
+    # print("\n\n\nBELOW THIS...")
+    # print(response)
     return response

@@ -7,7 +7,8 @@ var userSchema = new Schema({
 	firstName: String,
 	lastName: String,
 	email: String,
-	learning_engine: { type: String, default: '' }
+	learning_engine: { type: String, default: '' },
+	player_games: [Schema.Types.Mixed]
 });
 
 var User = mongoose.model('User', userSchema);
