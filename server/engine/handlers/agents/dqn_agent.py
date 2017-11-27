@@ -9,13 +9,13 @@ from agents.utils import get_model
 from agents.memory_replay import MemoryReplay
 
 class DQNAgent:
-    def __init__(self, arch_name, memory_size, batch_size, epsilon, gamma):
+    def __init__(self, memory_size, batch_size, epsilon, gamma):
         self.epsilon = epsilon
         self.gamma = gamma
         self.memory = MemoryReplay(memory_size)
         self.batch_size = batch_size
         
-    def init_model(arch_name):
+    def init_model(self, arch_name):
         self.model = get_model(arch_name)
         self.optimizer = optim.RMSprop(self.model.parameters())
 
@@ -31,7 +31,7 @@ class DQNAgent:
     def select_action(self, state, is_learning=True): 
         dtype = torch.FloatTensor
         sample = random.random()
-        if sample > self.epsilon or is_learning:
+        if sample > self.epsilon and is_learning:
             state_var = Variable(state, volatile=True).type(dtype)
             q_values = self.model(state_var).data
 

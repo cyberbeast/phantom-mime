@@ -15,7 +15,6 @@ class QNet(nn.Module):
         self.dense3 = nn.Linear(16, 4)
 
     def forward(self, inputs):
-        pdb.set_trace()
         inputs = F.relu(self.bn1(self.conv1(inputs)))
         inputs = F.relu(self.bn2(self.conv2(inputs)))
         inputs = F.relu(self.bn3(self.conv3(inputs)))

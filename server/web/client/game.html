@@ -1,135 +1,148 @@
 <html>
 
 <head>
-  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
-  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script src="../client/assets/js/game.js"></script>
-  <script src="../client/assets/js/components.js"></script>
-  <script src="../client/assets/js/scenes.js"></script>
-  <script src="../client/assets/js/game_grid.js"></script>
-  <script>
-    console.log('Loading game...');
+	<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="../client/assets/js/game.js"></script>
+	<script src="../client/assets/js/components.js"></script>
+	<script src="../client/assets/js/scenes.js"></script>
+	<script src="../client/assets/js/game_grid.js"></script>
+	<script>
+		console.log('Loading game...');
 
-    $(function () {
-      var turn_local = 'Player1';
-      var gameid_local = null;
-      //var pObject
-      console.log("Establishing socket connection now...");
-      var socket = io('/game');
-      var myIdentity;
+		$(function () {
+			var turn_local = 'Player1';
+			var gameid_local = null;
+			//var pObject
+			console.log("Establishing socket connection now...");
+			var socket = io('/game');
+			var myIdentity;
+			var gameMode;
 
-      socket.on('yourIdentity', function (data) {
-        myIdentity = data
-      })
+			socket.on('yourIdentity', function (data) {
+				myIdentity = data
+			})
 
-      socket.emit('gameInit', {
-        data: "from Game"
-      });
+			socket.emit('gameInit', {
+				data: "from Game"
+			});
 
-      socket.on('gameInitResponse', function (data) {
-        // console.log(data);
-        data.identity = myIdentity
-        Game.start(socket, data);
-        gameid_local = Game.create_players();
-        console.log("From game.js: ", turn_local)
-      })
+			socket.on('message', function (data) {
+				switch (data.event) {
+					case 'trainAIGameInitResponse':
+						console.log('AI GameInitResponse', data)
+						gameMode = data.gameMode
+						clientInit(data.response, socket)
+						break;
 
-      socket.on('newMove', function (data) {
-        //get player in previous turn
-        var prev_turn = data['player'] === 'Player1' ? 'Player2' : 'Player1';
-        var prev_player = Crafty(prev_turn);
-        //render their move
-        Game.move(prev_player, data['move']);
-        var playerPositions = Game.get_status()
-        var player1 = Crafty('Player1');
-        var player2 = Crafty('Player2');
-        console.log(playerPositions)
-        console.log(player1.y / 50);
-        console.log(playerPositions[1][1]);
-        if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
-          socket.emit('gameServerListener', {
-            event: 'endGame',
-            data: {
-              winner: !(prev_player === player1)
+					case 'trainAINewMove':
+						var prev_turn = data['player'] === 'Player1' ? 'Player2' : 'Player1';
+						console.log("AI PLAYER", prev_turn)
+						console.log("AI's Move", data['move'])
 
-            }
-          });
-        }
-        if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
-          socket.emit('gameServerListener', {
-            event: 'endGame',
-            data: {
-              winner: !(prev_player === player2)
+						var prev_player = Crafty(prev_turn);
+						console.log("Prev Player", prev_player)
+						Game.move(prev_player, parseInt(data['move']));
+						handleGameEnd(prev_player, false);
+						turn_local = data['player'];
+						break;
+				}
+			})
 
-            }
-          });
-        }
+			function clientInit(data, socket) {
+				console.log('Inside clientInit', data)
+				data.identity = myIdentity
+				Game.start(socket, data)
+				gameid_local = Game.create_players();
+				console.log("From game.js: ", turn_local)
+			}
 
-        //toggle the turn again
-        turn_local = data['player'];
-        console.log('After rendering move:', turn_local);
+			function handleGameEnd(entity, isCurrentPlayer) {
+				var playerPositions = Game.get_status()
+				var player1 = Crafty('Player1');
+				var player2 = Crafty('Player2');
+				var isWinner = null;
+				if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
+					isWinner = entity === player1;
+				}
+				if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
+					isWinner = entity === player2;
+				}
+				socket.emit('gameServerListener', {
+					event: 'endGame',
+					data: {
+						winner: isWinner === isCurrentPlayer
+
+					}
+				});
+			}
+
+			socket.on('gameInitResponse', function (data) {
+				// console.log(data);
+				// data.identity = myIdentity
+				// Game.start(socket, data);
+				// gameid_local = Game.create_players();
+				// console.log("From game.js: ", turn_local)
+				clientInit(data, socket)
+			})
 
 
-      });
 
-      $(document).keydown(function (e) {
-        console.log(turn_local)
-        //get player entity whose turn it is
-        var current_player = Crafty(turn_local);
-        //render move if the current use is the current player
-        if (myIdentity === current_player.identity) {
-          Game.move(current_player, e.keyCode);
-          var playerPositions = Game.get_status()
-          var player1 = Crafty('Player1');
-          var player2 = Crafty('Player2');
-          console.log(playerPositions)
-          console.log(player1.y / 50);
-          console.log(playerPositions[1][1]);
-          if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
-            socket.emit('gameServerListener', {
-              event: 'endGame',
-              data: {
-                winner: (current_player === player1)
+			socket.on('newMove', function (data) {
 
-              }
-            });
-          }
-          if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
-            socket.emit('gameServerListener', {
-              event: 'endGame',
-              data: {
-                winner: (current_player === player2)
+				//get player in previous turn
+				var prev_turn = data['player'] === 'Player1' ? 'Player2' : 'Player1';
+				var prev_player = Crafty(prev_turn);
+				//render their move
+				Game.move(prev_player, data['move']);
+				handleGameEnd(prev_player, false);
+				//toggle the turn again
+				turn_local = data['player'];
 
-              }
-            });
-          }
-          //toggle turn after move is rendered
-          turn_local = turn_local === 'Player1' ? 'Player2' : 'Player1';
-          //emit to other player recent move
-          socket.emit('gameServerListener', {
-            event: 'newMove',
-            data: {
-              player: turn_local,
-              move: e.keyCode,
-              game: gameid_local
 
-            }
-          });
+			});
 
-        }
-      });
+			$(document).keydown(function (e) {
+				console.log(turn_local)
+				//get player entity whose turn it is
+				var current_player = Crafty(turn_local);
+				//render move if the current use is the current player
+				if (myIdentity === current_player.identity) {
+					Game.move(current_player, e.keyCode);
 
-      socket.on('success', function (data) {
-        console.log("REGISTERED with: " + data)
-      })
-    });
-  </script>
+					handleGameEnd(current_player, true);
+					//toggle turn after move is rendered
+					turn_local = turn_local === 'Player1' ? 'Player2' : 'Player1';
+					//emit to other player recent move
+					sendObject = {
+						player: turn_local,
+						move: e.keyCode,
+						game: gameid_local
+					}
+
+					if (gameMode === 'trainAI') {
+						sendObject.mode = gameMode
+					}
+
+					socket.emit('gameServerListener', {
+						event: 'newMove',
+						data: sendObject
+					});
+
+				}
+			});
+
+			socket.on('success', function (data) {
+				console.log("REGISTERED with: " + data)
+			})
+		});
+	</script>
 </head>
 
 <body>
-  <div>
-  </div>
+	<div>
+	</div>
 </body>
 
 </html>

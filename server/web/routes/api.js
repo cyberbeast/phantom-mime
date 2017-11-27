@@ -102,9 +102,14 @@ router.get('/game', function(req, res) {
 		req.session.fbid = req.user.id;
 		req.session.email = req.user.email;
 		req.session.gSession = req.query.gameID;
+		if (req.query.mode === 'trainAI') {
+			req.session.gameMode = 'trainAI';
+		} else {
+			req.session.gameMode = 'PvP';
+			req.session.p2 = req.query.player2;
+		}
 		req.session.p1 = req.query.player1;
 		// check for existence player2
-		req.session.p2 = req.query.player2;
 		res.sendFile(path.join(__dirname + '/../client/game.html'));
 	} else {
 		res.send('ERROR');

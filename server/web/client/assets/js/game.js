@@ -3,6 +3,7 @@ var old_key = null;
 var moves = function(data) {
 	var key = data.k;
 	var entity = data.t;
+	console.log('KEY is', key);
 	if (key == Crafty.keys.LEFT_ARROW) {
 		entity.x = entity.x - Game1.get_tilesize();
 		old_key = key;
@@ -54,6 +55,8 @@ Game = {
 		Crafty.scene('Game');
 	},
 	move: function(turn, key) {
+		console.log('KEY in move is ', key);
+		console.log('type is ', typeof key);
 		var possibleKeys = [
 			Crafty.keys.LEFT_ARROW,
 			Crafty.keys.RIGHT_ARROW,
@@ -61,6 +64,7 @@ Game = {
 			Crafty.keys.UP_ARROW
 		];
 		if (possibleKeys.includes(key)) {
+			console.log('reaching... ');
 			turn.trigger('move', {
 				t: turn,
 				k: key

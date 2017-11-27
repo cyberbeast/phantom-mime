@@ -1,9 +1,9 @@
 import numpy as np, pdb
 
-def move_up(x, y): return ( x, y - 1 )
-def move_down(x, y): return ( x, y + 1 )
-def move_left(x, y): return ( x - 1, y )
-def move_right(x, y): return ( x + 1, y )
+def move_up(x, y): return  x, y - 1 
+def move_down(x, y): return  x, y + 1
+def move_left(x, y): return x - 1, y
+def move_right(x, y): return x + 1, y
 
 def _init_action_set():
     
@@ -21,25 +21,39 @@ class BasicGame:
         return grid.cpu().numpy()[:, : 0, height - 1] == 2 \
                 or grid.cpu().numpy()[:, :, width-1, 0] == 1 
 
-    def calc_reward(self, grid):
-        return 0
+    def calc_reward(self, state, next_state, turn):
+        if self.is_game_finished(next_state):
+            return 10
+        elif np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
+            return -1
+        else:
+            _, _, curr_y, curr_x = np.where( state ==  turn )
+            # _, _, dest_y, dest_x = np.where( state ==  turn )
+            
+            return 2
+        
 
     def process_action(self, grid, action, turn):
         _, _, height, width = grid.size()
         state = grid.cpu().numpy()
 
         #  determine the new position of player based on turn and action
-        _, _, y_old, x_old = np.where( state == ( turn + 1 ) )
+        _, _, y_old, x_old = np.where( state ==  turn )
         x_new, y_new = self.action_set[action](x_old, y_old)
+        # print(x_old, y_old)
+        # print('inside game logic')
+        # print(turn, x_new, y_new)
+        # print(grid)
 
 
         #  make sure the new position is valid (wrt game rules)
-        if not (0 < x_new <= width and 0 < y_new <= height):
+        if not (0 <= x_new < width and 0 <= y_new < height):
             return grid
         if grid.cpu().numpy()[:, :, y_new, x_new] != 0:
             return grid
 
         #  update the grid with the player's new position
         grid[:, :, y_old, x_old] = 0
-        grid[:, :, y_new, x_new] = turn + 1
+        grid[:, :, y_new, x_new] = turn 
+        # print(grid)
         return grid
