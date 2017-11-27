@@ -1,4 +1,4 @@
-import pdb
+import matplotlib, io, base64, pdb
 from itertools import count
 
 import logging
@@ -64,15 +64,18 @@ class LearningEngine:
                 
                 if done: break
 
-    def train_agent(self, opponent, nb_episodes, play_self):
+    def train_agent(self, opponent, nb_episodes):
+        avg_reward_ls = []
+
         for episode_idx in range(nb_episodes):
             # logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
             self.env.reset()
             state, reward, done, _ = self.env.step(0, 1)
 
-            max_plies = 30
+            total_reward, num_plies, max_plies = 0.0, 0, 30
             #  play the game
             for step_idx in count(1):
+                num_plies = step_idx
 
                 # break out of game if too many turns and no one has won
                 if step_idx > max_plies: break
@@ -84,6 +87,8 @@ class LearningEngine:
                 #  select an action and then perform it
                 action = current_agent.select_action(state)
                 next_state, reward, done, _ = self.env.step(action[0,0], (step_idx % 2) + 1)
+                
+                total_reward += reward
 
                 # Store the transition in memory
                 current_agent.memory.remember(state, action, next_state, reward)
@@ -92,7 +97,10 @@ class LearningEngine:
                 state = next_state
 
                 # Perform one step of the optimization (on the target network)
-                if play_self or step_idx % 2 == 0:
-                    current_agent.optimize()
+                current_agent.optimize()
                 
                 if done: break
+
+            avg_reward_ls.append(total_reward / num_plies)
+
+        #  TODO: plot training performance
