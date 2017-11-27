@@ -192,7 +192,7 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
         # print(turn)
         next_state, _, done, _ = rival.env.step(agent_action[0,0], turn)
         retries += 1
-        break
+        # break
 
     print(next_state.cpu().numpy())
 

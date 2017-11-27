@@ -1,6 +1,9 @@
 import torch
 from copy import deepcopy
 
+import logging
+logger = logging.getLogger(__name__)
+
 from games.basic_game import BasicGame 
 
 class GameEnv:
@@ -23,7 +26,10 @@ class GameEnv:
         self.grid = grid
 
     def step(self, action, turn):
-        new_state = self.game_logic.process_action(self.grid.clone(), action, turn)
+        try:
+            new_state = self.game_logic.process_action(self.grid.clone(), action, turn)
+        except Exception as e:
+            logging.exception('Copying tensors broke!')
         reward = self.dtype([ self.game_logic.calc_reward(self.grid, new_state) ])
         done = self.game_logic.is_game_finished(self.grid)
         self.grid = new_state

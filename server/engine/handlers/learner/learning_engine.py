@@ -32,7 +32,7 @@ class LearningEngine:
             self.env.reset()
             state, reward, done, _ = self.env.step(0, 1)
 
-            max_plies = 10
+            max_plies = 500
             #  play the game
             for step_idx in count():
 

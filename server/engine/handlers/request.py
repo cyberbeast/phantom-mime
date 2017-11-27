@@ -25,6 +25,7 @@ def nextMove(key, mode):
         # pass
         logging.exception('UNSUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE')
         # logger.info(e, extra={ 'tags': ['dev_mssg:UNSUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE']})
+    r.set(key + ':learning_engine', dumps(rival))
     return response
 
 @hug.get("/gameInit")
@@ -56,7 +57,7 @@ def gameInit(key, fbid, gameMode="PvP" ):
                 #     logger.info(e.message, extra={ 'tags': 'dev_mssg:LAUNCH_TRAINING BROKE'})
                 # else:
                 #     logger.info(e, extra={ 'tags': 'dev_mssg:LAUNCH_TRAINING BROKE'})
-                logger.info(e, extra={ 'tags': 'dev_mssg:LAUNCHING_TRAININ_BOROKE'})
+                logging.exception('LAUNCHING TRAINING BROKE!')
             
         else:
             return errorMessage + "init_learning engine failure!!!"
