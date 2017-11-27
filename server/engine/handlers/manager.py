@@ -157,16 +157,15 @@ def launch_training(fbid, learner_name, n_iters=1000):
     
     # load appropriate opposing engine
     if learner_name == 'mime':
-        # opposing_learner = loads(user_data['the_rival'])
-        # opposing_learner.agent.load_weights(user_data['the_rival_weights']) 
-        # opponent = opposing_learner.agent
-        opponent = None
-        # TODO: fetch game history from user data (mongo)
+        opposing_engine= loads(user_data['the_rival'])
+        opposing_engine.agent.load_weights(user_data['the_rival_weights']) 
+        game_history = user_data['trainAI_games'][-1]
+        moves = game_history['moves'][::-1]
+        learner.train_mime(opposing_engine.agent, moves[1:], 500)
     else:
-        opponent = learner.agent
-    
-    # train the learning engine's agent
-    learner.train_agent(opponent, n_iters, learner_name == 'the_rival')
+        # train the learning engine's agent
+        learner.train_agent(learner.agent, n_iters, learner_name == 'the_rival')
+
     learner.env.reset()
 
     # dump the learnt weights to user data(mongo)

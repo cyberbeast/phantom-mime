@@ -21,6 +21,14 @@ class BasicGame:
         return grid.cpu().numpy()[:, : 0, height - 1] == 2 \
                 or grid.cpu().numpy()[:, :, width-1, 0] == 1 
 
+    def calc_mime_reward(self, state_for_mime, state_for_user, turn):
+        _, _, y_user, x_user = np.where( state_for_user ==  turn )
+        _, _, y_mime, x_mime = np.where( state_for_mime ==  turn )
+        if y_user == y_mime and x_user == x_mime:
+            return -2
+        else:
+            return 0
+
     def calc_reward(self, state, next_state):
         if self.is_game_finished(next_state):
             return 0
@@ -28,7 +36,6 @@ class BasicGame:
             return -3
         else:            
             return -1
-        
 
     def process_action(self, grid, action, turn):
         _, _, height, width = grid.size()
