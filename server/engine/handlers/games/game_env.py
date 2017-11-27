@@ -30,7 +30,8 @@ class GameEnv:
             new_state = self.game_logic.process_action(self.grid.clone(), action, turn)
         except Exception as e:
             logging.exception('Copying tensors broke!')
-        reward = self.dtype([ self.game_logic.calc_reward(self.grid, new_state) ])
+        reward_val = self.game_logic.calc_reward(self.grid, new_state)
+        reward = self.dtype([ reward_val ])
         done = self.game_logic.is_game_finished(self.grid)
         self.grid = new_state
         return new_state, reward, done, None
