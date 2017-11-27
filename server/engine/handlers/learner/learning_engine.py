@@ -1,6 +1,9 @@
 import pdb
 from itertools import count
 
+import logging
+logger = logging.getLogger(__name__)
+
 #  local imports 
 from agents.dqn_agent import DQNAgent
 from games.game_env import GameEnv
@@ -25,17 +28,24 @@ class LearningEngine:
 
     def train_agent(self, opponent, nb_episodes, early_stopping):
         for episode_idx in range(nb_episodes):
+            # logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
             self.env.reset()
-            state, reward, done, _ = self.env.step(0, 0)
+            state, reward, done, _ = self.env.step(0, 1)
 
+            max_plies = 10
             #  play the game
             for step_idx in count():
+
+                # break out of game if too many turns and no one has won
+                if step_idx > max_plies: break
+
+                # logger.info(step_idx, extra={ 'tags': ['dev_mssg: step_idx'] })
                 #  set current player based on turn
                 current_agent = self.agent if step_idx % 2 == 0 else opponent
 
                 #  select an action and then perform it
                 action = current_agent.select_action(state)
-                next_state, reward, done, _ = self.env.step(action[0,0], step_idx % 2)
+                next_state, reward, done, _ = self.env.step(action[0,0], (step_idx % 2) + 1)
 
                 # Store the transition in memory
                 current_agent.memory.remember(state, action, next_state, reward)

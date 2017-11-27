@@ -66,19 +66,58 @@ var gameNamespace = socket => {
 						console.log(reply);
 					}
 				);
-				// client.lrange(
-				// 	socket.request.session.gSession + ':moves',
-				// 	0,
-				// 	-1,
-				// 	function(err, reply) {
-				// 		console.log('Inside newMove', reply);
-				// 	}
-				// );
-				console.log('Responding to newMove');
-				socket.to(payload.data.game).emit(payload.event, {
-					player: payload.data.player,
-					move: payload.data.move
-				});
+				console.log('Game Mode is: ', payload.data.mode);
+				if (payload.data.mode === 'trainAI') {
+					var options = {
+						method: 'GET',
+						uri:
+							config.engine.host +
+							':' +
+							config.engine.port +
+							config.engine.nextMoveRoute,
+						qs: {
+							key: socket.request.session.gSession,
+							fbid: socket.request.session.fbid,
+							mode: payload.data.mode
+						},
+						json: true
+					};
+
+					request(options)
+						.then(function(response) {
+							console.log('HAVE response');
+							if (response === true) {
+								console.log('INSIDE here');
+								client.lindex(payload.data.game + ':moves', 0, function(
+									err,
+									reply
+								) {
+									console.log('ENGINE response on REDIS ', reply);
+									var val = reply.split(' ');
+									socket.send({
+										event: 'trainAINewMove',
+										gameMode: 'trainAI',
+										player: log_currentPlayer,
+										move: val[1]
+									});
+								});
+							}
+						})
+						.catch(function(err) {
+							// Something bad happened, handle the error
+							console.log('API: Search failed', err);
+							socket
+								.to(socket.request.session.gSession)
+								.emit('gameInitResponse', err);
+						});
+				} else {
+					console.log('Responding to newMove');
+					socket.to(payload.data.game).emit(payload.event, {
+						player: payload.data.player,
+						move: payload.data.move
+					});
+				}
+
 				break;
 
 			case 'endGame':
@@ -158,6 +197,14 @@ var gameNamespace = socket => {
 			json: true
 		};
 
+		if (socket.request.session.gameMode === 'trainAI') {
+			options.qs.gameMode = socket.request.session.gameMode;
+			options.qs.fbid = socket.request.session.fbid;
+		} else {
+			options.qs.gameMode = socket.request.session.gameMode;
+			options.qs.fbid = socket.request.session.fbid;
+		}
+
 		request(options)
 			.then(function(response) {
 				// Request was successful, use the response object at will
@@ -173,7 +220,19 @@ var gameNamespace = socket => {
 					socket.request.session.gSession + ':moves',
 					'READY -> ' + socket.request.sessionID
 				);
-				ioImport(socket.request.session.gSession, 'gameInitResponse', response);
+				if (socket.request.session.gameMode === 'trainAI') {
+					socket.send({
+						event: 'trainAIGameInitResponse',
+						gameMode: 'trainAI',
+						response: response
+					});
+				} else {
+					ioImport(
+						socket.request.session.gSession,
+						'gameInitResponse',
+						response
+					);
+				}
 			})
 			.catch(function(err) {
 				// Something bad happened, handle the error
@@ -238,6 +297,18 @@ var loungeNamespace = socket => {
 					socket.id.replace('/lounge#', '') +
 					extract[1].replace('/lounge#', '')
 			});
+		});
+		socket.on('trainAI', function() {
+			console.log(
+				socket.request.session.email +
+					':' +
+					socket.id +
+					' wants to train his/her AI agent.'
+			);
+			var gSession = '?gameID=' + socket.id.replace('/lounge#', '');
+			var player = '&player1=' + socket.request.sessionID;
+			var mode = '&mode=trainAI';
+			socket.send({ redirectParam: gSession + player + mode });
 		});
 
 		socket.on('challengeStatus', function(data) {
