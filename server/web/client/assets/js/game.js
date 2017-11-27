@@ -67,6 +67,9 @@ Game = {
 			});
 		}
 	},
+	get_status: function() {
+		return Game1.get_playerPosition();
+	},
 	create_players: function() {
 		var positions = Game1.get_playerPosition();
 		var tile_value = positions[0];
@@ -81,6 +84,7 @@ Game = {
 			player2sprite: [0, 0, 50, 50]
 		});
 		var player1 = Crafty.e('Player1','player1sprite').at(tile_value[0], tile_value[1]).color('rgb(87, 109, 20)');
+		// var player1 = Crafty.e('Player1').at(tile_value2[0] - 1, tile_value2[1]);
 		// player1.setName('player1');
 		player1.identity = player1Token;
 		var player2 = Crafty.e('Player2','player2sprite').at(tile_value2[0], tile_value2[1]).color('rgb(87, 109, 20)');

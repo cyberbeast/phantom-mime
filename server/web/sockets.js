@@ -1,8 +1,13 @@
 const redis = require('redis'),
 	config = require('./config'),
-	request = require('request-promise');
+	request = require('request-promise'),
+	mongoose = require('mongoose'),
+	User = require('./models/user'),
+	ioImport = require('./index').sendToGame;
 
-const ioImport = require('./index').sendToGame;
+mongoose.connect('mongodb://mongodb/', {
+	useMongoClient: true
+});
 
 const client = redis.createClient({
 	host: config.redis.host,
@@ -49,11 +54,63 @@ var gameNamespace = socket => {
 		console.log('GAME sent something');
 		switch (payload.event) {
 			case 'newMove':
+				console.log('Gman is sending', payload.data);
+				console.log('GSESSION', socket.request.session.gSession);
+				var log_currentPlayer =
+					payload.data.player === 'Player1' ? 'Player2' : 'Player1';
+				client.lpush(
+					payload.data.game + ':moves',
+					log_currentPlayer + ':' + String(payload.data.move),
+					function(err, reply) {
+						console.log(err);
+						console.log(reply);
+					}
+				);
+				// client.lrange(
+				// 	socket.request.session.gSession + ':moves',
+				// 	0,
+				// 	-1,
+				// 	function(err, reply) {
+				// 		console.log('Inside newMove', reply);
+				// 	}
+				// );
 				console.log('Responding to newMove');
 				socket.to(payload.data.game).emit(payload.event, {
 					player: payload.data.player,
 					move: payload.data.move
 				});
+				break;
+
+			case 'endGame':
+				console.log(payload);
+				// client.lrange(
+				// 	socket.request.session.gSession + ':moves',
+				// 	0,
+				// 	-1,
+				// 	function(err, reply) {
+				// 		console.log('Inside endGame', reply);
+				// 	}
+				// );
+				var writeObject = {
+					gameID: socket.request.session.gSession,
+					winner: payload.data.winner,
+					game_meta: client.get(socket.request.session.gSession + ':game_meta'),
+					moves: client.lrange(
+						socket.request.session.gSession + ':moves',
+						0,
+						-1
+					)
+				};
+
+				User.findOneAndUpdate(
+					{ id: String(socket.request.session.fbid) },
+					{ $push: { player_games: writeObject } },
+					{ safe: true, upsert: true, new: true },
+					function(err, reply) {
+						if (err) throw err;
+					}
+				);
+				break;
 		}
 	});
 
@@ -112,6 +169,10 @@ var gameNamespace = socket => {
 				// 	event: 'gameInit',
 				// 	data: response
 				// });
+				client.lpush(
+					socket.request.session.gSession + ':moves',
+					'READY -> ' + socket.request.sessionID
+				);
 				ioImport(socket.request.session.gSession, 'gameInitResponse', response);
 			})
 			.catch(function(err) {

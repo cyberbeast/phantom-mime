@@ -9,6 +9,8 @@ class grid {
 		this.tileHeight = 50;
 		this.socket = socket;
 		this.myIdentity = data.identity;
+		this.winner = null;
+		this.loser = null;
 
 		// mutating server game grid to client game grid
 		this.playerPositions[1] = [
@@ -58,5 +60,13 @@ class grid {
 	}
 	getsocket() {
 		return this.socket;
+	}
+	set_win(winner, loser) {
+		this.winner = winner;
+		this.loser = loser;
+	}
+	getwinner(winner, loser) {
+		console.log(this.winner, this.loser);
+		return [this.winner, this.loser];
 	}
 }

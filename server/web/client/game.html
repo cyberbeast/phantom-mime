@@ -41,9 +41,36 @@
         var prev_player = Crafty(prev_turn);
         //render their move
         Game.move(prev_player, data['move']);
+        var playerPositions = Game.get_status()
+        var player1 = Crafty('Player1');
+        var player2 = Crafty('Player2');
+        console.log(playerPositions)
+        console.log(player1.y / 50);
+        console.log(playerPositions[1][1]);
+        if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
+          socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: !(prev_player === player1)
+
+            }
+          });
+        }
+        if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
+          socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: !(prev_player === player2)
+
+            }
+          });
+        }
+
         //toggle the turn again
         turn_local = data['player'];
         console.log('After rendering move:', turn_local);
+
+
       });
 
       $(document).keydown(function (e) {
@@ -53,6 +80,30 @@
         //render move if the current use is the current player
         if (myIdentity === current_player.identity) {
           Game.move(current_player, e.keyCode);
+          var playerPositions = Game.get_status()
+          var player1 = Crafty('Player1');
+          var player2 = Crafty('Player2');
+          console.log(playerPositions)
+          console.log(player1.y / 50);
+          console.log(playerPositions[1][1]);
+          if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
+            socket.emit('gameServerListener', {
+              event: 'endGame',
+              data: {
+                winner: (current_player === player1)
+
+              }
+            });
+          }
+          if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
+            socket.emit('gameServerListener', {
+              event: 'endGame',
+              data: {
+                winner: (current_player === player2)
+
+              }
+            });
+          }
           //toggle turn after move is rendered
           turn_local = turn_local === 'Player1' ? 'Player2' : 'Player1';
           //emit to other player recent move
@@ -65,6 +116,7 @@
 
             }
           });
+
         }
       });
 
