@@ -28,7 +28,7 @@ passport.use(
 		// facebook will send back the tokens and profile
 		function(access_token, refresh_token, profile, done) {
 			// asynchronous
-			console.log(profile);
+			// console.log(profile);
 			process.nextTick(function() {
 				// find the user in the database based on their facebook id
 				User.findOne({ id: profile.id }, function(err, user) {
@@ -103,6 +103,7 @@ router.get('/game', function(req, res) {
 		req.session.email = req.user.email;
 		req.session.gSession = req.query.gameID;
 		req.session.p1 = req.query.player1;
+		// check for existence player2
 		req.session.p2 = req.query.player2;
 		res.sendFile(path.join(__dirname + '/../client/game.html'));
 	} else {

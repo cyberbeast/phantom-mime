@@ -67,6 +67,9 @@ Game = {
 			});
 		}
 	},
+	get_status: function() {
+		return Game1.get_playerPosition();
+	},
 	create_players: function() {
 		var positions = Game1.get_playerPosition();
 		var tile_value = positions[0];
@@ -74,6 +77,7 @@ Game = {
 		var gameid = getUrlParameter('gameID');
 		var player1Token = getUrlParameter('player1');
 		var player2Token = getUrlParameter('player2');
+		// var player1 = Crafty.e('Player1').at(tile_value2[0] - 1, tile_value2[1]);
 		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
 		// player1.setName('player1');
 		player1.identity = player1Token;

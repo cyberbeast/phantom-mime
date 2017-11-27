@@ -59,7 +59,7 @@ Crafty.c('WinTileP1', {
 	reach: function() {
 		this.collision().onHit('Player1', function() {
 			//console.log("PLayer1 Win");
-			Crafty.trigger('EndGame', '1');
+			Crafty.trigger('EndGame', 'player1');
 		});
 	}
 });
@@ -69,7 +69,7 @@ Crafty.c('WinTileP2', {
 	},
 	reach: function() {
 		this.collision().onHit('Player2', function() {
-			Crafty.trigger('EndGame', '2');
+			Crafty.trigger('EndGame', 'player2');
 			//console.log("PLayer2 Win");
 		});
 	}

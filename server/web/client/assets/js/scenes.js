@@ -129,7 +129,11 @@ Crafty.scene(
 			.color('rgb(87, 109, 20)')
 			.reach();
 		this.show_victory = this.bind('EndGame', function(e) {
-			console.log('Player:', e, ' Wins!');
+			if (e == 'player1') {
+				Game1.set_win(player1Token, player2Token);
+			} else {
+				Game1.set_win(player2Token, player1Token);
+			}
 			Crafty.scene('Victory');
 		});
 	},
@@ -140,13 +144,9 @@ Crafty.scene(
 Crafty.scene(
 	'Victory',
 	function() {
-		// Display some text in celebration of the victory
 		Crafty.e('2D, DOM, Text')
 			.attr({ x: 15, y: 15 })
 			.text('Victory!');
-		//this.restart_game = this.bind('KeyDown', function() {
-		//  Crafty.scene('Game');
-		//});
 	},
 	function() {
 		this.unbind('KeyDown');
