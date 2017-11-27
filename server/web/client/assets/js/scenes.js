@@ -22,13 +22,9 @@ Crafty.scene(
 		var rocks = Game1.get_obstaclePosition();
 		var socket = Game1.getsocket();
 		var url = window.location.href;
-		console.log(url);
 		var gameid = getUrlParameter('gameID');
 		var player1Token = getUrlParameter('player1');
 		var player2Token = getUrlParameter('player2');
-		console.log(gameid);
-		console.log(player1Token);
-		console.log(player2Token);
 		Crafty.sprite('assets/sprites/castle1_50x50.gif', {
 			castle_sprite: [0, 0, 50, 50]
 		});
@@ -71,55 +67,6 @@ Crafty.scene(
 					.color('rgb(87, 109, 20)');
 			}
 		}
-		// Player entities
-
-		// data : {
-		// 	player: "player1",
-		// 	move: "left"
-		// }
-
-		// socket.on('newMove', function(data) {
-		// 	console.log('NEW MOVE: ' + data.move);
-		// 	var player = data.player;
-		// 	var move = data.move;
-
-		// 	if (Game1.getMyIdentity() == turn.identity) {
-		// 		turn.trigger('move', move);
-		// 		if (turn.getName() == 'player1') {
-		// 			turn = player2;
-		// 		} else {
-		// 			turn = player1;
-		// 		}
-		// 	}
-		// });
-
-		// turn.bind('KeyDown', function(e) {
-		// 	console.log(
-		// 		'I am ' + Game1.getMyIdentity() + '. TURN is: ' + turn.identity
-		// 	);
-		// 	if (Game1.getMyIdentity() == turn.identity) {
-		// 		console.log('YAYY MY TURM');
-		// 		turn.trigger('move', e.key);
-		// 		if (turn.getName() == 'player1') {
-		// 			console.log('Switching to player2');
-		// 			turn = player2;
-		// 			console.log('TURN should be: ' + turn.identity);
-		// 		} else {
-		// 			turn = player1;
-		// 		}
-		// 		socket.emit('gameServerListener', {
-		// 			event: 'newMove',
-		// 			data: {
-		// 				game: gameid,
-		// 				player1: player1Token,
-		// 				player2: player2Token,
-		// 				player: turn,
-		// 				move: e.key
-		// 			}
-		// 		});
-		// 	}
-		// });
-
 		Crafty.e('WinTileP1', 'castle_sprite2')
 			.at(tile_value2[0], tile_value2[1])
 			.color('rgb(87, 109, 20)')
@@ -129,12 +76,8 @@ Crafty.scene(
 			.color('rgb(87, 109, 20)')
 			.reach();
 		this.show_victory = this.bind('EndGame', function(e) {
-			if (e == 'player1') {
-				Game1.set_win(player1Token, player2Token);
-			} else {
-				Game1.set_win(player2Token, player1Token);
-			}
-			Crafty.scene('Victory');
+
+			Crafty.scene('Victory',e);
 		});
 	},
 	function() {
@@ -143,10 +86,16 @@ Crafty.scene(
 );
 Crafty.scene(
 	'Victory',
-	function() {
-		Crafty.e('2D, DOM, Text')
-			.attr({ x: 15, y: 15 })
-			.text('Victory!');
+	function(playerName) {
+		var display = Crafty.e('HTML','DOM').attr({ w:800, h:800})
+		.append("<h1>"+String(playerName)+": Wins! </h1>");
+		display.css({
+			'padding': '15%',
+			'color': '#fff',
+			'font-family': "Roboto Slab",
+			'font-size': '10px',
+			'font-weight': '20'
+		});
 	},
 	function() {
 		this.unbind('KeyDown');
