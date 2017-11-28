@@ -1,8 +1,8 @@
 var old_key = null;
-
 var moves = function(data) {
 	var key = data.k;
 	var entity = data.t;
+	console.log('KEY is', key);
 	if (key == Crafty.keys.LEFT_ARROW) {
 		entity.x = entity.x - Game1.get_tilesize();
 		old_key = key;
@@ -29,6 +29,9 @@ var hits = function(player) {
 		player.y = player.y - Game1.get_tilesize();
 	}
 };
+var detectPlayer=function(){
+	console.log('nothing');
+};
 
 var getUrlParameter = function getUrlParameter(sParam) {
 	var sPageURL = decodeURIComponent(window.location.search.substring(1)),
@@ -54,6 +57,8 @@ Game = {
 		Crafty.scene('Game');
 	},
 	move: function(turn, key) {
+		console.log('KEY in move is ', key);
+		console.log('type is ', typeof key);
 		var possibleKeys = [
 			Crafty.keys.LEFT_ARROW,
 			Crafty.keys.RIGHT_ARROW,
@@ -61,11 +66,15 @@ Game = {
 			Crafty.keys.UP_ARROW
 		];
 		if (possibleKeys.includes(key)) {
+			console.log('reaching... ');
 			turn.trigger('move', {
 				t: turn,
 				k: key
 			});
 		}
+	},
+	collision_call:function(player){
+		Crafty.scene('Victory',player);
 	},
 	get_status: function() {
 		return Game1.get_playerPosition();
@@ -77,11 +86,17 @@ Game = {
 		var gameid = getUrlParameter('gameID');
 		var player1Token = getUrlParameter('player1');
 		var player2Token = getUrlParameter('player2');
-		// var player1 = Crafty.e('Player1').at(tile_value2[0] - 1, tile_value2[1]);
-		var player1 = Crafty.e('Player1').at(tile_value[0], tile_value[1]);
+		Crafty.sprite('assets/sprites/player1_main.png', {
+			player1sprite: [0, 0, 50, 50]
+		});
+		Crafty.sprite('assets/sprites/player2_main.png', {
+			player2sprite: [0, 0, 50, 50]
+		});
+		var player1 = Crafty.e('Player1','player1sprite').at(tile_value[0], tile_value[1]).color('rgb(87, 109, 20)');
+		//var player1 = Crafty.e('Player1','player1sprite').at(tile_value2[0], tile_value2[1]+1).color('rgb(87, 109, 20)');
 		// player1.setName('player1');
 		player1.identity = player1Token;
-		var player2 = Crafty.e('Player2').at(tile_value2[0], tile_value2[1]);
+		var player2 = Crafty.e('Player2','player2sprite').at(tile_value2[0], tile_value2[1]).color('rgb(87, 109, 20)');
 		// player2.setName('player2');
 		player2.identity = player2Token;
 		player1

@@ -3,7 +3,8 @@ const redis = require('redis'),
 	request = require('request-promise'),
 	mongoose = require('mongoose'),
 	User = require('./models/user'),
-	ioImport = require('./index').sendToGame;
+	ioImport = require('./index').sendToGame,
+	waterfall = require('async-waterfall');
 
 mongoose.connect('mongodb://mongodb/', {
 	useMongoClient: true
@@ -19,9 +20,23 @@ client.on('error', function(err) {
 });
 
 var gameNamespace = socket => {
+	console.log('REACHING HERE...');
 	var p1 = socket.request.p1;
 	var p2 = socket.request.p2;
 	var viewerOnly;
+
+	client.set(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive', 'true', function(
+		err,
+		reply
+	) {
+		console.log(err);
+		console.log(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive =', reply);
+	});
+
+	client.get(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive', function(err, reply) {
+		console.log(err);
+		console.log(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive =', reply);
+	});
 
 	// var currentConnection = socket.request.sessionID;
 	// if (currentConnection != p1 || currentConnection != p2) {
@@ -40,11 +55,7 @@ var gameNamespace = socket => {
 				socket.request.session.gSession
 		);
 
-		ioImport(
-			socket.request.session.gSession,
-			'success',
-			socket.request.session.email
-		);
+		ioImport(socket.request.session.gSession, 'success', socket.request.session.email);
 		// socket
 		// 	.to(socket.request.session.gSession)
 		// 	.emit('success', socket.request.session.email);
@@ -56,8 +67,7 @@ var gameNamespace = socket => {
 			case 'newMove':
 				console.log('Gman is sending', payload.data);
 				console.log('GSESSION', socket.request.session.gSession);
-				var log_currentPlayer =
-					payload.data.player === 'Player1' ? 'Player2' : 'Player1';
+				var log_currentPlayer = payload.data.player === 'Player1' ? 'Player2' : 'Player1';
 				client.lpush(
 					payload.data.game + ':moves',
 					log_currentPlayer + ':' + String(payload.data.move),
@@ -66,23 +76,78 @@ var gameNamespace = socket => {
 						console.log(reply);
 					}
 				);
-				// client.lrange(
-				// 	socket.request.session.gSession + ':moves',
-				// 	0,
-				// 	-1,
-				// 	function(err, reply) {
-				// 		console.log('Inside newMove', reply);
-				// 	}
-				// );
-				console.log('Responding to newMove');
-				socket.to(payload.data.game).emit(payload.event, {
-					player: payload.data.player,
-					move: payload.data.move
-				});
+				console.log('Game Mode is: ', payload.data.mode);
+				if (payload.data.mode === 'trainAI') {
+					var options = {
+						method: 'GET',
+						uri: config.engine.host + ':' + config.engine.port + config.engine.nextMoveRoute,
+						qs: {
+							key: socket.request.session.gSession,
+							fbid: socket.request.session.fbid,
+							mode: payload.data.mode
+						},
+						json: true
+					};
+
+					request(options)
+						.then(function(response) {
+							console.log('HAVE response');
+							if (response === true) {
+								console.log('INSIDE here');
+								client.lindex(payload.data.game + ':moves', 0, function(err, reply) {
+									console.log('ENGINE response on REDIS ', reply);
+									var val = reply.split(':');
+									socket.send({
+										event: 'trainAINewMove',
+										gameMode: 'trainAI',
+										player: log_currentPlayer,
+										move: val[1]
+									});
+								});
+							}
+						})
+						.catch(function(err) {
+							// Something bad happened, handle the error
+							console.log('API: Search failed', err);
+							socket.to(socket.request.session.gSession).emit('gameInitResponse', err);
+						});
+				} else {
+					var opponent =
+						socket.request.sessionID === socket.request.session.p1
+							? socket.request.session.p2
+							: socket.request.session.p1;
+
+					client.get(socket.request.session.gSession + ':' + opponent + ':isAlive', function(err, reply) {
+						console.log('ISALIVE: ', reply);
+						if (reply === 'true') {
+							console.log('Responding to newMove');
+							socket.to(payload.data.game).emit(payload.event, {
+								player: payload.data.player,
+								move: payload.data.move
+							});
+						} else {
+							engineRequest(
+								{ key: socket.request.session.gSession, mode: 'PvAI' },
+								config.engine.nextMoveRoute,
+								function(response) {
+									console.log(config.engine.nextMoveRoute, { mode: 'PvAI' }, response);
+									client.lindex(payload.data.game + ':moves', 0, function(err, reply) {
+										console.log('ENGINE response on REDIS ', reply);
+										var val = reply.split(':');
+										var player = val[0] === 'Player1' ? 'Player2' : 'Player1';
+										ioImport(socket.request.session.gSession, 'newMove', { player: player });
+									});
+								}
+							);
+						}
+					});
+				}
+
 				break;
 
 			case 'endGame':
-				console.log(payload);
+				console.log('endGame data:', payload);
+				console.log('EMAIL: ', socket.request.session.email);
 				// client.lrange(
 				// 	socket.request.session.gSession + ':moves',
 				// 	0,
@@ -91,25 +156,82 @@ var gameNamespace = socket => {
 				// 		console.log('Inside endGame', reply);
 				// 	}
 				// );
-				var writeObject = {
-					gameID: socket.request.session.gSession,
-					winner: payload.data.winner,
-					game_meta: client.get(socket.request.session.gSession + ':game_meta'),
-					moves: client.lrange(
-						socket.request.session.gSession + ':moves',
-						0,
-						-1
-					)
-				};
+				waterfall(
+					[
+						function(callback) {
+							console.log('HERE WF');
+							var writeObject = {
+								gameID: socket.request.session.gSession,
+								winner: payload.data.winner
+							};
+							console.log('lvl1', writeObject);
+							callback(null, writeObject);
+						},
+						function(writeObject, callback) {
+							client.get(socket.request.session.gSession + ':game_meta', function(err, reply) {
+								writeObject.game_meta = reply;
+								console.log('inside redis session:game_meta', reply);
+								console.log('lvl2', writeObject);
+								callback(null, writeObject);
+							});
+						},
+						function(writeObject, callback) {
+							client.lrange(socket.request.session.gSession + ':moves', 0, -1, function(err, reply) {
+								writeObject.moves = reply;
+								console.log('inside redis session:moves', reply);
+								console.log('lvl3', writeObject);
+								callback(null, writeObject);
+							});
+						},
+						function(writeObject, callback) {
+							console.log('ENDING');
+							var pushObject;
+							if (socket.request.session.gameMode === 'trainAI') {
+								var pushObject = { trainAI_games: writeObject };
 
-				User.findOneAndUpdate(
-					{ id: String(socket.request.session.fbid) },
-					{ $push: { player_games: writeObject } },
-					{ safe: true, upsert: true, new: true },
-					function(err, reply) {
-						if (err) throw err;
+								console.log("Inside trainAI's endGame toggle", socket.request.session.fbid);
+							} else {
+								var pushObject = { player_games: writeObject };
+							}
+							User.findOneAndUpdate(
+								{ id: String(socket.request.session.fbid) },
+								{ $push: pushObject },
+								{ safe: true, upsert: true, new: true },
+								function(err, res) {
+									if (err) throw err;
+
+									console.log('ERR', err);
+									// console.log('RES', res);
+									var qs = {
+										fbid: socket.request.session.fbid
+									};
+									if (socket.request.session.gameMode === 'trainAI') {
+										console.log('oOK');
+										engineRequest(qs, config.engine.trainMimeRoute, function(resp) {
+											console.log(config.engine.trainMimeRoute, qs, resp);
+											socket.send({ event: 'mimeTrainStarted' });
+										});
+									}
+									callback(null, 'done');
+								}
+							);
+						}
+					],
+					function(err, result) {
+						// result now equals 'done'
+						console.log('Waterfall completed!', result);
 					}
 				);
+
+				var mv;
+
+				// client.get(soc);
+
+				// Tell client that endGame was successfully handled by server.
+				// Client will set a 5 second timer, at the end of which client will redirect the player to /dashboard.
+				socket.send({
+					event: 'endGameAcknowledged'
+				});
 				break;
 		}
 	});
@@ -130,6 +252,13 @@ var gameNamespace = socket => {
 	}
 
 	socket.on('disconnect', function() {
+		client.set(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive', 'false', function(
+			err,
+			reply
+		) {
+			console.log(socket.request.session.gSession + ':' + socket.request.sessionID + ':isAlive =', reply);
+		});
+
 		// if (!viewerOnly) {
 		// client.get(socket.request.sessionID, function(err, reply) {
 		// 	console.log(reply);
@@ -137,26 +266,56 @@ var gameNamespace = socket => {
 		// console.log(client.get(socket.request.sessionID));
 		console.log(socket.request.sessionID + ' has disconnected!');
 		socket.leave(socket.request.session.gSession);
+		client.lindex(socket.request.session.gSession + ':moves', 0, function(err, reply) {
+			console.log('ENGINE response on REDIS ', reply);
+			var val = reply.split(':');
+			var current_player = val[0] === 'Player1' ? 'Player2' : 'Player1';
+			var qs = {
+				key: socket.request.session.gSession,
+				fbid: socket.request.session.fbid,
+				mode: 'PvAI'
+			};
+			engineRequest(qs, config.engine.initMimeRoute, function(res) {
+				console.log(config.engine.initMimeRoute, qs, res);
+				engineRequest(
+					{ key: socket.request.session.gSession, mode: 'PvAI' },
+					config.engine.nextMoveRoute,
+					function(response) {
+						console.log(config.engine.nextMoveRoute, { mode: 'PvAI' }, response);
+						client.lindex(socket.request.session.gSession + ':moves', 0, function(err, reply) {
+							console.log('ENGINE response on REDIS ', reply);
+							var val = reply.split(':');
+							var player = val[0] === 'Player1' ? 'Player2' : 'Player1';
+							ioImport(socket.request.session.gSession, 'newMove', { player: player });
+						});
+					}
+				);
+			});
+		});
 		// }
 	});
 
 	socket.on('gameInit', function(data) {
 		// if (!viewerOnly) {
 		client.set(socket.request.session.gSession, 'READY');
-		console.log('REC: ' + JSON.stringify(data));
 		var options = {
 			method: 'GET',
-			uri:
-				config.engine.host +
-				':' +
-				config.engine.port +
-				config.engine.gameInitRoute,
+			uri: config.engine.host + ':' + config.engine.port + config.engine.gameInitRoute,
 			qs: {
-				key: socket.request.session.gSession
-				// fbid: socket.request.session.fbid
+				key: socket.request.session.gSession,
+				fbid: socket.request.session.fbid
 			},
 			json: true
 		};
+		console.log('REC: ' + JSON.stringify(data));
+
+		if (socket.request.session.gameMode === 'trainAI') {
+			options.qs.gameMode = socket.request.session.gameMode;
+			options.qs.fbid = socket.request.session.fbid;
+		} else {
+			options.qs.gameMode = socket.request.session.gameMode;
+			options.qs.fbid = socket.request.session.fbid;
+		}
 
 		request(options)
 			.then(function(response) {
@@ -169,27 +328,45 @@ var gameNamespace = socket => {
 				// 	event: 'gameInit',
 				// 	data: response
 				// });
-				client.lpush(
-					socket.request.session.gSession + ':moves',
-					'READY -> ' + socket.request.sessionID
-				);
-				ioImport(socket.request.session.gSession, 'gameInitResponse', response);
+				client.lpush(socket.request.session.gSession + ':moves', 'READY -> ' + socket.request.sessionID);
+				if (socket.request.session.gameMode === 'trainAI') {
+					socket.send({
+						event: 'trainAIGameInitResponse',
+						gameMode: 'trainAI',
+						response: response
+					});
+				} else {
+					ioImport(socket.request.session.gSession, 'gameInitResponse', response);
+				}
 			})
 			.catch(function(err) {
 				// Something bad happened, handle the error
 				console.log('API: Search failed', err);
-				socket
-					.to(socket.request.session.gSession)
-					.emit('gameInitResponse', err);
+				socket.to(socket.request.session.gSession).emit('gameInitResponse', err);
 			});
 		// }
 	});
 };
 
+function engineRequest(qs, route, cb) {
+	var options = {
+		method: 'GET',
+		uri: config.engine.host + ':' + config.engine.port + route,
+		qs: qs,
+		json: true
+	};
+	request(options)
+		.then(function(response) {
+			cb(response);
+		})
+		.catch(function(err) {
+			console.log('err');
+			cb(err);
+		});
+}
+
 var loungeNamespace = socket => {
-	console.log(
-		'Session in LOUNGE' + JSON.stringify(socket.request.session.email)
-	);
+	console.log('Session in LOUNGE' + JSON.stringify(socket.request.session.email));
 
 	var del = false;
 
@@ -208,9 +385,7 @@ var loungeNamespace = socket => {
 		socket.on('checkIn', function(data) {
 			console.log(socket.request.session);
 			socket.emit('sessID', socket.request.sessionID);
-			client.sadd('loungeMembers', [
-				socket.request.session.email + ':' + socket.id
-			]);
+			client.sadd('loungeMembers', [socket.request.session.email + ':' + socket.id]);
 			client.smembers('loungeMembers', function(err, reply) {
 				console.log(reply);
 				socket.emit('memberList', { data: reply });
@@ -219,13 +394,7 @@ var loungeNamespace = socket => {
 		});
 
 		socket.on('challengePlayer', function(data) {
-			console.log(
-				socket.request.session.email +
-					':' +
-					socket.id +
-					' wants to challenge ' +
-					data.player
-			);
+			console.log(socket.request.session.email + ':' + socket.id + ' wants to challenge ' + data.player);
 			var extract = data.player.split(':');
 			console.log(extract);
 			socket.to(extract[1]).emit('newChallengeRequest', {
@@ -233,11 +402,15 @@ var loungeNamespace = socket => {
 				challengerID: socket.id,
 				challengerUID: '&player1=' + socket.request.sessionID,
 				challengeeID: extract[1],
-				gSession:
-					'?gameID=' +
-					socket.id.replace('/lounge#', '') +
-					extract[1].replace('/lounge#', '')
+				gSession: '?gameID=' + socket.id.replace('/lounge#', '') + extract[1].replace('/lounge#', '')
 			});
+		});
+		socket.on('trainAI', function() {
+			console.log(socket.request.session.email + ':' + socket.id + ' wants to train his/her AI agent.');
+			var gSession = '?gameID=' + socket.id.replace('/lounge#', '');
+			var player = '&player1=' + socket.request.sessionID;
+			var mode = '&mode=trainAI';
+			socket.send({ redirectParam: gSession + player + mode });
 		});
 
 		socket.on('challengeStatus', function(data) {
@@ -246,19 +419,13 @@ var loungeNamespace = socket => {
 				var temp = data;
 				temp.payload.challengeeUID = '&player2=' + socket.request.sessionID;
 				socket.to(temp.payload.challengerID).emit('challengeAccepted', {
-					redirectParam:
-						temp.payload.gSession +
-						temp.payload.challengerUID +
-						temp.payload.challengeeUID
+					redirectParam: temp.payload.gSession + temp.payload.challengerUID + temp.payload.challengeeUID
 				});
 			}
 		});
 
 		socket.on('disconnect', function() {
-			client.SREM(
-				'loungeMembers',
-				socket.request.session.email + ':' + socket.id
-			);
+			client.SREM('loungeMembers', socket.request.session.email + ':' + socket.id);
 			console.log(socket.request.sessionID + ' has disconnected from LOUNGE!');
 			client.smembers('loungeMembers', function(err, reply) {
 				console.log(reply);

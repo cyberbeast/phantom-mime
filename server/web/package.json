@@ -10,6 +10,7 @@
   "author": "cyberbeast",
   "license": "ISC",
   "dependencies": {
+    "async-waterfall": "^0.1.5",
     "connect-redis": "^3.3.2",
     "express": "^4.16.2",
     "express-session": "^1.15.6",

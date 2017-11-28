@@ -69,10 +69,7 @@ router.use(passport.session());
 
 // route for facebook authentication and login
 // different scopes while logging in
-router.get(
-	'/login/facebook',
-	passport.authenticate('facebook', { scope: 'email' })
-);
+router.get('/login/facebook', passport.authenticate('facebook', { scope: 'email' }));
 
 // handle the callback after facebook has authenticated the user
 router.get(
@@ -102,9 +99,14 @@ router.get('/game', function(req, res) {
 		req.session.fbid = req.user.id;
 		req.session.email = req.user.email;
 		req.session.gSession = req.query.gameID;
+		if (req.query.mode === 'trainAI') {
+			req.session.gameMode = 'trainAI';
+		} else {
+			req.session.gameMode = 'PvP';
+			req.session.p2 = req.query.player2;
+		}
 		req.session.p1 = req.query.player1;
 		// check for existence player2
-		req.session.p2 = req.query.player2;
 		res.sendFile(path.join(__dirname + '/../client/game.html'));
 	} else {
 		res.send('ERROR');
@@ -117,6 +119,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
 	User.findOne({ id: String(id) }, function(err, user) {
+		// console.log(user);
 		done(err, user);
 	});
 });

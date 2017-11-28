@@ -80,6 +80,13 @@
 
         }
       });
+      $('#ai').on("click", function () {
+        lounge.emit('trainAI')
+      });
+
+      lounge.on('message', function (data) {
+        window.location.replace("/api/game" + data.redirectParam)
+      })
 
 
     });
@@ -99,11 +106,11 @@
         </div>
       </div>
       <div class="col-md-6 col-lg-6">
-        <a type="button" class="btn btn-primary btn-block" href='/api/game'>Train your AI</a>
+        <a type="button" class="btn btn-primary btn-block" id='ai'>Train your AI</a>
 
       </div>
       <div class="col-md-6 col-lg-6">
-        <a type="button" class="btn btn-primary btn-block" href=''>Play against another player</a>
+        <a type="button" class="btn btn-primary btn-block" href=' '>Play against another player</a>
         <ul class="list-group" id="members">
 
         </ul>

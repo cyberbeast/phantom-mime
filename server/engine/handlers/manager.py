@@ -1,24 +1,30 @@
 import os, sys, argparse, pdb
 sys.path.insert(0, os.environ['DQN_ROOT'])
 
-import numpy as np, redis, json, random
+import torch, numpy as np, redis, json, random
 from pickle import loads, dumps
 from pymongo import MongoClient
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 from learner.learning_engine import LearningEngine
 
 client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
+action_ls = ['38', '40', '37', '39']
+
 
 def ping():
     return "pong"
 
-def _fast_forward_game(learner, game_meta, moves):
-    for i in range(0, len(moves), 2):
-        user_action, user_turn = moves[i:i+1]
+def _fast_forward_game(learner, game_meta, moves, delimiter=':'):
+    for i in range(len(moves), 0, -1):
+        user_turn, user_action = map(int, moves[i-1].decode('utf-8').split(delimiter))
 
         #  get the current state of the game post user action
-        _, _, _, _ = learner.env.step(action_ls.index(user_action), user_turn)
+        _, _, _, _ = learner.env.step(int(action_ls.index(user_action)), user_turn[-1])
 
 def _generate_obstacles(mx, my, max_removed):
     maze = [[0 for x in range(mx)] for y in range(my)]
@@ -57,13 +63,12 @@ def _generate_obstacles(mx, my, max_removed):
     num_remove = np.random.randint(max_removed)
     print('\nRemoving {} obstacles from total {} obstacles'.format(num_remove, len(rock_ls)))
     for i in range(num_remove):
-        remove_idx = random.randint(0, len(rock_ls))
+        remove_idx = random.randint(-1, len(rock_ls)-1)
         rock_ls.pop(remove_idx)
     
-            
     return rock_ls
 
-def init_learning_engine(fbid, game_key, mode='train', delimiter=':'):
+def init_learning_engine(fbid, game_key, mode, delimiter=':'):
     print('\nInitializing learning engine. Please wait..')
     #  get user data from mongodb
     user_data = client.admin.users.find_one({ 'id': fbid })
@@ -71,23 +76,36 @@ def init_learning_engine(fbid, game_key, mode='train', delimiter=':'):
     #  break out if no user data found
     if user_data is None: return False
 
-    #  get game meta data from session
-    game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
+    # check if game key was passed
+    if game_key is None:
+        #  get game meta data from user data
+        game_history = user_data['trainAI_games'][-1]
+        game_meta = json.loads(game_history['game_meta'])
+    
+    #  check if session data is legit    
+    elif r.exists(game_key + delimiter + 'game_meta') == 0: 
+        return False
 
-    #  TODO: check if session data is legit
+    else:
+        #  get game meta data from session
+        game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
+
     game_width, game_height = game_meta['grid_width'], game_meta['grid_height']
     obstacles = game_meta['obstacles']
 
-    learner_name = 'the_rival' if mode == 'train' else 'mime'
+    learner_name = 'the_rival' if mode == 'trainAI' else 'mime'
 
     #  init the learner
     rival = LearningEngine(learner_name)
     rival.init_game(game_width, game_height, obstacles)
 
-    #  TODO: fast forward game
-    moves = r.get(game_key + delimiter + 'moves')
-    _fast_forward_game(learner, game_meta, moves)
-
+    # fast forward game
+    if mode != 'trainMime' and r.exists(game_key + delimiter + 'moves') == 0:
+        moves = r.lrange(game_key + delimiter + 'moves',0,-2)
+        logger.info(moves, extra={ 'tags': ['dev_mssg:MOVES']})
+        if len(moves) > 0:
+            _fast_forward_game(rival, game_meta, moves)
+    
     #  load saved weights if any, store model initial weights otherwise
     if (learner_name + '_weights') in user_data:
         rival.agent.load_weights(user_data[learner_name + '_weights'])
@@ -102,43 +120,6 @@ def init_learning_engine(fbid, game_key, mode='train', delimiter=':'):
 
     return True 
 
-def next_move(game_key, fbid, mode='train', retry_limit=5):
-    action_ls = ['up', 'down', 'left', 'right']
-    
-    #  get learning engine from user data
-    user_data = client.find_one({ 'id': fbid })
-    rival = user_data['the_rival'] if mode == 'train' else user_data['mime']
-
-    while True:
-        #  get user's recent action and game turn from session data
-        moves = r.get(game_key + delimiter + 'moves')
-        user_action, user_turn = moves[0:2]
-
-        #  get the current state of the game post user action
-        print('\nUpdating game state by user action..')
-        state, _, _, _ = rival.env.step(action_ls.index(user_action), user_turn)
-        
-        #  make agent choose an action
-        print('\nUpdating game state by agent action...')
-        agent_action = rival.agent.select_action(state)
-        next_state, _, _, _ = rival.env.step(agent_action[0, 0], (turn + 1) % 2)
-        retries = 0
-
-        #  repeat if chosen action is invalid
-        while np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
-            print('\nUpdating game state by agent action (retry {})...'.format(retries))
-            #  agent chooses randomly if too many invalid moves are chosen
-            #  otherwise choose from learned weights
-            agent_action = rival.agent.select_action(state, retries < retry_limit)
-            next_state, _, done, _ = rival.env.step(agent_action[0, 0], (turn + 1) % 2)
-            retries += 1
-
-        moves.append([ action_ls[agent_action[0, 0]], (turn + 1) % 2 ])
-        r.set(game_key + delimiter + 'moves')
-        status = True
-
-        yield status 
-
 def init_game(game_key, delimiter=':'): 
     #  get user status
     status = r.get(game_key).decode("utf-8")
@@ -150,7 +131,7 @@ def init_game(game_key, delimiter=':'):
             game_meta = {}
             game_meta['grid_width'] = game_width
             game_meta['grid_height'] = game_height
-            game_meta['obstacles'] = _generate_obstacles(game_width, game_height, 10)
+            game_meta['obstacles'] = _generate_obstacles(game_width, game_height, 30)
             game_meta['player_pos'] = [ (game_height-1, 0), (0, game_width-1) ]
         
             # write session data to redis.
@@ -177,13 +158,74 @@ def init_game(game_key, delimiter=':'):
     }
 
 def launch_training(fbid, learner_name, n_iters=500):
+    client = MongoClient(os.environ['MONGO_HOST'])
+    
+    # load the primary learning engine
     user_data = client.admin.users.find_one({ 'id': fbid })
-    learner = user_data[learner_name]
+    learner = loads(user_data[learner_name])
     learner.agent.load_weights(user_data[learner_name + '_weights'])
-    learner.train_agent(learner, n_iters, learner_name == 'the_rival')
-    user_data[learner_name + '_weights'] = learner_name.agent.save_weights()
+    
+    # load appropriate opposing engine
+    if learner_name == 'mime':
+        opposing_engine= loads(user_data['the_rival'])
+        opposing_engine.agent.load_weights(user_data['the_rival_weights']) 
+        game_history = user_data['trainAI_games'][-1]
+        moves = game_history['moves'][::-1]
+        learner.train_mime(opposing_engine.agent, moves[1:], n_iters)
+    else:
+        # train the learning engine's agent
+        result = learner.train_agent(learner.agent, n_iters) 
+        if result is not None:
+            user_data[learner_name + '_plots'] = result
+
+    learner.env.reset()
+
+    # dump the learnt weights to user data(mongo)
+    user_data[learner_name + '_weights'] = learner.agent.save_weights()
     client.admin.users.update_one({ 'id': fbid }, { '$set': user_data })
     return True
+
+def next_move(game_key, rival, delimiter=':', retry_limit=50):
+    status = True
+    
+    #  get user's recent action and game turn from session data
+    moves = r.lrange(game_key + delimiter + 'moves',0, -2)
+    logger.info(moves, extra={ 'tags': ['dev_mssg:user_moves']})
+    user_turn, user_action = moves[0].decode('utf-8').split(delimiter)
+
+    #  get the current state of the game post user action
+    print('\nUpdating game state by user action..')
+    user_turn = user_turn[-1]
+    state, _, _, _ = rival.env.step(int(action_ls.index(user_action)), int(user_turn))
+
+    #  make agent choose an action
+    print('\nUpdating game state by agent action...')
+    turn = int(user_turn) + 1
+    agent_action = rival.agent.select_action(state)
+    next_state, _, _, _ = rival.env.step(agent_action[0, 0], turn)
+    retries = 0
+
+    #  repeat if chosen action is invalid
+    # while np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
+    while torch.equal(state, next_state):
+        print(next_state.cpu().numpy())
+        print(state.cpu().numpy())
+        print(torch.equal(state, next_state))
+        print('\nUpdating game state by agent action (retry {})...'.format(retries))
+        #  agent chooses randomly if too many invalid moves are chosen
+        #  otherwise choose from learned weights
+        agent_action = rival.agent.select_action(state, retries < retry_limit)
+        # print(turn)
+        next_state, _, done, _ = rival.env.step(agent_action[0,0], turn)
+        retries += 1
+        # break
+
+    print(next_state.cpu().numpy())
+
+    # moves.append()
+    r.lpush(game_key + delimiter + 'moves', delimiter.join(map(str, ['Player'+str(turn), action_ls[agent_action[0, 0]] ])))
+
+    return status 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

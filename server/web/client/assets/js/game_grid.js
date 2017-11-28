@@ -61,12 +61,4 @@ class grid {
 	getsocket() {
 		return this.socket;
 	}
-	set_win(winner, loser) {
-		this.winner = winner;
-		this.loser = loser;
-	}
-	getwinner(winner, loser) {
-		console.log(this.winner, this.loser);
-		return [this.winner, this.loser];
-	}
 }
