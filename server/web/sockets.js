@@ -135,7 +135,10 @@ var gameNamespace = socket => {
 										console.log('ENGINE response on REDIS ', reply);
 										var val = reply.split(':');
 										var player = val[0] === 'Player1' ? 'Player2' : 'Player1';
-										ioImport(socket.request.session.gSession, 'newMove', { player: player });
+										ioImport(socket.request.session.gSession, 'newMove', {
+											player: player,
+											move: parseInt(val[1])
+										});
 									});
 								}
 							);

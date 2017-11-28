@@ -196,13 +196,13 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
     #  get the current state of the game post user action
     print('\nUpdating game state by user action..')
     user_turn = user_turn[-1]
-    state, _, _, _ = rival.env.step(int(action_ls.index(user_action)), int(user_turn))
+    state, _, done, _ = rival.env.step(int(action_ls.index(user_action)), int(user_turn))
 
     #  make agent choose an action
     print('\nUpdating game state by agent action...')
-    turn = int(user_turn) + 1
+    turn = (int(user_turn) % 2) + 1
     agent_action = rival.agent.select_action(state)
-    next_state, _, _, _ = rival.env.step(agent_action[0, 0], turn)
+    next_state, _, done, _ = rival.env.step(agent_action[0, 0], turn)
     retries = 0
 
     #  repeat if chosen action is invalid
@@ -218,11 +218,11 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
         # print(turn)
         next_state, _, done, _ = rival.env.step(agent_action[0,0], turn)
         retries += 1
+        if done: break
         # break
 
     print(next_state.cpu().numpy())
 
-    # moves.append()
     r.lpush(game_key + delimiter + 'moves', delimiter.join(map(str, ['Player'+str(turn), action_ls[agent_action[0, 0]] ])))
 
     return status 
