@@ -35,10 +35,25 @@ def trainMime(fbid):
     p.start()
     return True
 
+@hug.get("/initMime")
+def initMime(key, fbid, mode):
+    init_learning_engine_STATUS = init_learning_engine(fbid, key, mode)
+    logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
+    
+    if init_learning_engine_STATUS:
+        learner_name = 'the_rival' if mode == 'trainAI' else 'mime'
+        user_data = client.admin.users.find_one({ 'id': fbid })
+        rival = loads(user_data[learner_name])
+        rival.agent.load_weights(user_data[learner_name + '_weights'])
+        r.set(key + ':learning_engine', dumps(rival))
+        return True
+    else:
+        return False
+
 
 @hug.get("/gameInit")
 def gameInit(key, fbid, gameMode="PvP" ):
-    logger.info("Reaching here")
+    logger.info("Reaching here in gameInit")
     '''Possible Modes are: "PvP", "PvAI", "trainAI"'''
     response = init_game(key)
     errorMessage = "gameInit Failure: "
