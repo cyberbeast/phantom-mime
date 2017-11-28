@@ -83,10 +83,10 @@ Game = {
 		var gameid = getUrlParameter('gameID');
 		var player1Token = getUrlParameter('player1');
 		var player2Token = getUrlParameter('player2');
-		Crafty.sprite('assets/sprites/crash_50x50.png', {
+		Crafty.sprite('assets/sprites/player1_main.png', {
 			player1sprite: [0, 0, 50, 50]
 		});
-		Crafty.sprite('assets/sprites/player2_50x50.png', {
+		Crafty.sprite('assets/sprites/player2_main.png', {
 			player2sprite: [0, 0, 50, 50]
 		});
 		var player1 = Crafty.e('Player1','player1sprite').at(tile_value[0], tile_value[1]).color('rgb(87, 109, 20)');
