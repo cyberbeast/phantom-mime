@@ -18,7 +18,6 @@ var moves = function(data) {
 	}
 };
 var hits = function(player) {
-	console.log(old_key);
 	if (old_key == Crafty.keys.LEFT_ARROW) {
 		player.x = player.x + Game1.get_tilesize();
 	} else if (old_key == Crafty.keys.RIGHT_ARROW) {
@@ -50,7 +49,6 @@ var getUrlParameter = function getUrlParameter(sParam) {
 
 Game = {
 	start: function(socket, data) {
-		console.log(socket);
 		Game1 = new grid(socket, data);
 		Crafty.init(Game1.width(), Game1.height());
 		Crafty.background('rgb(87,109,20)');
@@ -92,11 +90,15 @@ Game = {
 		Crafty.sprite('assets/sprites/player2_main.png', {
 			player2sprite: [0, 0, 50, 50]
 		});
+
 		var player1 = Crafty.e('Player1','player1sprite').at(tile_value[0], tile_value[1]).color('rgb(87, 109, 20)');
+		//cheat below
 		//var player1 = Crafty.e('Player1','player1sprite').at(tile_value2[0], tile_value2[1]+1).color('rgb(87, 109, 20)');
 		// player1.setName('player1');
 		player1.identity = player1Token;
 		var player2 = Crafty.e('Player2','player2sprite').at(tile_value2[0], tile_value2[1]).color('rgb(87, 109, 20)');
+		//cheat below
+		//var player2 = Crafty.e('Player2','player2sprite').at(tile_value[0], tile_value[1]-1).color('rgb(87, 109, 20)');
 		// player2.setName('player2');
 		player2.identity = player2Token;
 		player1
