@@ -3,7 +3,8 @@ const redis = require('redis'),
 	request = require('request-promise'),
 	mongoose = require('mongoose'),
 	User = require('./models/user'),
-	ioImport = require('./index').sendToGame;
+	ioImport = require('./index').sendToGame,
+	waterfall = require('async-waterfall');
 
 mongoose.connect('mongodb://mongodb/', {
 	useMongoClient: true
@@ -81,7 +82,7 @@ var gameNamespace = socket => {
 								console.log('INSIDE here');
 								client.lindex(payload.data.game + ':moves', 0, function(err, reply) {
 									console.log('ENGINE response on REDIS ', reply);
-									var val = reply.split(' ');
+									var val = reply.split(':');
 									socket.send({
 										event: 'trainAINewMove',
 										gameMode: 'trainAI',
@@ -116,33 +117,76 @@ var gameNamespace = socket => {
 				// 		console.log('Inside endGame', reply);
 				// 	}
 				// );
-				var writeObject = {
-					gameID: socket.request.session.gSession,
-					winner: payload.data.winner,
-					game_meta: client.get(socket.request.session.gSession + ':game_meta'),
-					moves: client.lrange(socket.request.session.gSession + ':moves', 0, -1)
-				};
-				var pushObject;
-				if (payload.data.mode === 'trainAI') {
-					var pushObject = { trainAI_games: writeObject };
-					var qs = {
-						fbid: socket.request.session.fbid
-					};
-					engineRequest(qs, config.engine.trainMimeRoute, function(res) {
-						console.log(config.trainMimeRoute, qs, res);
-						socket.send({ event: 'mimeTrainStarted' });
-					});
-				} else {
-					var pushObject = { player_games: writeObject };
-				}
-				User.findOneAndUpdate(
-					{ id: String(socket.request.session.fbid) },
-					{ $push: pushObject },
-					{ safe: true, upsert: true, new: true },
-					function(err, reply) {
-						if (err) throw err;
+				waterfall(
+					[
+						function(callback) {
+							console.log('HERE WF');
+							var writeObject = {
+								gameID: socket.request.session.gSession,
+								winner: payload.data.winner
+							};
+							console.log('lvl1', writeObject);
+							callback(null, writeObject);
+						},
+						function(writeObject, callback) {
+							client.get(socket.request.session.gSession + ':game_meta', function(err, reply) {
+								writeObject.game_meta = reply;
+								console.log('inside redis session:game_meta', reply);
+								console.log('lvl2', writeObject);
+								callback(null, writeObject);
+							});
+						},
+						function(writeObject, callback) {
+							client.lrange(socket.request.session.gSession + ':moves', 0, -1, function(err, reply) {
+								writeObject.moves = reply;
+								console.log('inside redis session:moves', reply);
+								console.log('lvl3', writeObject);
+								callback(null, writeObject);
+							});
+						},
+						function(writeObject, callback) {
+							console.log('ENDING');
+							var pushObject;
+							if (socket.request.session.gameMode === 'trainAI') {
+								var pushObject = { trainAI_games: writeObject };
+
+								console.log("Inside trainAI's endGame toggle", socket.request.session.fbid);
+							} else {
+								var pushObject = { player_games: writeObject };
+							}
+							User.findOneAndUpdate(
+								{ id: String(socket.request.session.fbid) },
+								{ $push: pushObject },
+								{ safe: true, upsert: true, new: true },
+								function(err, res) {
+									if (err) throw err;
+
+									console.log('ERR', err);
+									// console.log('RES', res);
+									var qs = {
+										fbid: socket.request.session.fbid
+									};
+									if (socket.request.session.gameMode === 'trainAI') {
+										console.log('oOK');
+										engineRequest(qs, config.engine.trainMimeRoute, function(resp) {
+											console.log(config.engine.trainMimeRoute, qs, resp);
+											socket.send({ event: 'mimeTrainStarted' });
+										});
+									}
+									callback(null, 'done');
+								}
+							);
+						}
+					],
+					function(err, result) {
+						// result now equals 'done'
+						console.log('Waterfall completed!', result);
 					}
 				);
+
+				var mv;
+
+				// client.get(soc);
 
 				// Tell client that endGame was successfully handled by server.
 				// Client will set a 5 second timer, at the end of which client will redirect the player to /dashboard.
@@ -235,7 +279,7 @@ var gameNamespace = socket => {
 function engineRequest(qs, route, cb) {
 	var options = {
 		method: 'GET',
-		uri: config.engine.host + ':' + config.engine.port + config.engine.route,
+		uri: config.engine.host + ':' + config.engine.port + route,
 		qs: qs,
 		json: true
 	};

@@ -46,11 +46,7 @@ Crafty.scene(
 		});
 		for (var x = 0; x < Game1.get_gridwidth(); x++) {
 			for (var y = 0; y < Game1.get_gridheight(); y++) {
-				var at_edge =
-					x == 0 ||
-					x == Game1.get_gridwidth() - 1 ||
-					y == 0 ||
-					y == Game1.get_gridheight() - 1;
+				var at_edge = x == 0 || x == Game1.get_gridwidth() - 1 || y == 0 || y == Game1.get_gridheight() - 1;
 				if (at_edge) {
 					Crafty.e('Tree', 'Tree_sprite')
 						.at(x, y)
@@ -130,11 +126,13 @@ Crafty.scene(
 			.reach();
 		this.show_victory = this.bind('EndGame', function(e) {
 			if (e == 'player1') {
+				console.log('PLayer 1 won');
 				Game1.set_win(player1Token, player2Token);
 			} else {
+				console.log('PLayer 2 won');
 				Game1.set_win(player2Token, player1Token);
 			}
-			Crafty.scene('Victory');
+			//Crafty.scene('Victory');
 		});
 	},
 	function() {

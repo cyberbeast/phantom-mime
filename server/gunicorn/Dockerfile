@@ -8,7 +8,7 @@ RUN pip3 install hug -U
 RUN python -m pip install --upgrade pip
 RUN pip3 install http://download.pytorch.org/whl/cu75/torch-0.2.0.post3-cp36-cp36m-manylinux1_x86_64.whl 
 RUN pip3 install torchvision
-RUN pip3 install redis pymongo
+RUN pip3 install redis pymongo matplotlib seaborn
 
 WORKDIR /src
 

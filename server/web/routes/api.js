@@ -69,10 +69,7 @@ router.use(passport.session());
 
 // route for facebook authentication and login
 // different scopes while logging in
-router.get(
-	'/login/facebook',
-	passport.authenticate('facebook', { scope: 'email' })
-);
+router.get('/login/facebook', passport.authenticate('facebook', { scope: 'email' }));
 
 // handle the callback after facebook has authenticated the user
 router.get(
@@ -122,6 +119,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
 	User.findOne({ id: String(id) }, function(err, user) {
+		// console.log(user);
 		done(err, user);
 	});
 });

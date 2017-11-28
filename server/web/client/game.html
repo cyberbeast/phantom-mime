@@ -72,19 +72,28 @@
 				var player1 = Crafty('Player1');
 				var player2 = Crafty('Player2');
 				var isWinner = null;
+				var shouldSendEndGame = false
+				console.log(playerPositions)
 				if (player1.x / 50 == playerPositions[1][0] && player1.y / 50 == playerPositions[1][1]) {
 					isWinner = entity === player1;
+					shouldSendEndGame = true
 				}
 				if (player2.x / 50 == playerPositions[0][0] && player2.y / 50 == playerPositions[0][1]) {
 					isWinner = entity === player2;
+					shouldSendEndGame = true
 				}
-				socket.emit('gameServerListener', {
-					event: 'endGame',
-					data: {
-						winner: isWinner === isCurrentPlayer
-
-					}
-				});
+				console.log(player1.x, player1.y, player2.x, player2.y)
+				if (shouldSendEndGame == true){
+					socket.emit('gameServerListener', {
+						event: 'endGame',
+						data: {
+							winner: isWinner === isCurrentPlayer
+	
+						}
+					});
+				} else {
+					console.log("Not GAME END yet!")
+				}
 			}
 
 			socket.on('gameInitResponse', function (data) {
