@@ -90,7 +90,7 @@ Crafty.scene(
 	'Victory',
 	function(playerName) {
 		var display = Crafty.e('HTML','DOM').attr({ w:800, h:800})
-		.append("<h1>"+String(playerName)+"</h1>");
+		.append("<h1>"+String(playerName)+": Wins!</h1>");
 		display.css({
 			'padding': '15%',
 			'color': '#fff',
