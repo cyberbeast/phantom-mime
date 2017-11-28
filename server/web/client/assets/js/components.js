@@ -40,9 +40,8 @@ Crafty.c('Bush', {
 Crafty.c('Player1', {
 	init: function() {
 		var old_key = null;
-		this.requires('Actor, Fourway, Color, Collision')
-			.color('rgb(20, 75, 25)')
-			.collision();
+		this.requires('Actor, Fourway, Color, Collision,Motion')
+			.color('rgb(20, 75, 25)');
 	}
 });
 Crafty.c('Player2', {
@@ -58,8 +57,8 @@ Crafty.c('WinTileP1', {
 	},
 	reach: function() {
 		this.collision().onHit('Player1', function() {
-			//console.log("PLayer1 Win");
-			Crafty.trigger('EndGame', 'player1');
+			
+			Crafty.trigger('EndGame', 'player 1');
 		});
 	}
 });
@@ -69,7 +68,7 @@ Crafty.c('WinTileP2', {
 	},
 	reach: function() {
 		this.collision().onHit('Player2', function() {
-			Crafty.trigger('EndGame', 'player2');
+			Crafty.trigger('EndGame', 'player 2');
 			//console.log("PLayer2 Win");
 		});
 	}

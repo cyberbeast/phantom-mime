@@ -18,8 +18,11 @@ class BasicGame:
 
     def is_game_finished(self, grid):
         _, _, height, width = grid.size()
+
+        player_died = (2 not in grid.cpu().numpy()) or (1 not in grid.cpu().numpy())
         return grid.cpu().numpy()[:, : 0, height - 1] == 2 \
-                or grid.cpu().numpy()[:, :, width-1, 0] == 1 
+                or grid.cpu().numpy()[:, :, width-1, 0] == 1 \
+                or player_died 
 
     def calc_mime_reward(self, state_for_mime, state_for_user, turn):
         _, _, y_user, x_user = np.where( state_for_user.cpu().numpy() ==  turn )
@@ -53,7 +56,7 @@ class BasicGame:
         #  make sure the new position is valid (wrt game rules)
         if not (0 <= x_new < width and 0 <= y_new < height):
             return grid
-        if grid.cpu().numpy()[:, :, y_new, x_new] != 0:
+        if grid.cpu().numpy()[:, :, y_new, x_new] == -1:
             return grid
 
         #  update the grid with the player's new position

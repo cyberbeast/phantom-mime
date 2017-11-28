@@ -7,7 +7,10 @@
 	<script src="../client/assets/js/game.js"></script>
 	<script src="../client/assets/js/components.js"></script>
 	<script src="../client/assets/js/scenes.js"></script>
-	<script src="../client/assets/js/game_grid.js"></script>
+  <script src="../client/assets/js/game_grid.js"></script>
+  <style>
+      #cr-stage { border:2px solid black; margin:5px auto; color:white }
+      </style>
 	<script>
 		console.log('Loading game...');
 
@@ -49,7 +52,8 @@
 						break;
 					
 					case 'endGameAcknowledged':
-						console.log('Server acknowledged endGame. Redirecting user to /dashboard in 5 seconds')
+            console.log('Server acknowledged endGame. Redirecting user to /dashboard in 5 seconds')
+            Game.collision_call("Game over");
 						// START TIMER HERE
 						break;
 					
@@ -108,7 +112,8 @@
 
 
 			socket.on('newMove', function (data) {
-
+        var player1 = Crafty('Player1');
+				var player2 = Crafty('Player2');
 				//get player in previous turn
 				var prev_turn = data['player'] === 'Player1' ? 'Player2' : 'Player1';
 				var prev_player = Crafty(prev_turn);
@@ -116,13 +121,38 @@
 				Game.move(prev_player, data['move']);
 				handleGameEnd(prev_player, false);
 				//toggle the turn again
-				turn_local = data['player'];
+        turn_local = data['player'];
+        //Collision Detection
+        if(player1.x == prev_player.x && player1.y == prev_player.y && prev_player !==player1)
+        {
+          console.log("player2 hit player1");
+          socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: (prev_player === player1)
+            }
+          });
+          //Game.collision_call("Player 2")
+        }
+        if(player2.x == prev_player.x && player2.y == prev_player.y && prev_player !==player2)
+        {
+          console.log("player1 hit player2");
+          socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: (prev_player === player2)
+            }
+          });
+          //Game.collision_call("Player 1")
+        }
 
 
 			});
 
 			$(document).keydown(function (e) {
-				console.log(turn_local)
+        console.log(turn_local)
+        var player1 = Crafty('Player1');
+				var player2 = Crafty('Player2');
 				//get player entity whose turn it is
 				var current_player = Crafty(turn_local);
 				//render move if the current use is the current player
@@ -132,7 +162,29 @@
 					handleGameEnd(current_player, true);
 					//toggle turn after move is rendered
 					turn_local = turn_local === 'Player1' ? 'Player2' : 'Player1';
-					//emit to other player recent move
+          //emit to other player recent move
+          if(player1.x == current_player.x && player1.y == current_player.y && current_player ===player2)
+          {
+            console.log("player2 hit player1");
+            socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: !(current_player === player1)
+            }
+          });
+          //Game.collision_call("Player 2")
+          }
+          if(player2.x == current_player.x && player2.y == current_player.y && current_player ===player1)
+          {
+            console.log("player1 hit player2");
+            socket.emit('gameServerListener', {
+            event: 'endGame',
+            data: {
+              winner: !(current_player === player2)
+            }
+          });
+          //Game.collision_call("Player 1")
+          }
 					sendObject = {
 						player: turn_local,
 						move: e.keyCode,

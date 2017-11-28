@@ -108,7 +108,8 @@ var gameNamespace = socket => {
 				break;
 
 			case 'endGame':
-				console.log(payload);
+				console.log('endGame data:', payload);
+				console.log('EMAIL: ', socket.request.session.email)
 				// client.lrange(
 				// 	socket.request.session.gSession + ':moves',
 				// 	0,
