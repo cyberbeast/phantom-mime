@@ -35,7 +35,7 @@ class LearningEngine:
             # logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
             self.env.reset()
             #  get initial game state by enacting first user move
-            _, user_action = map(int, moves[0].decode('utf-8').split(delimiter))
+            user_action = move_history[0].split(delimiter)[-1]
             state, reward, done, _ = self.env.step(action_ls.index(user_action), 1)
 
             max_plies = 30
@@ -45,7 +45,7 @@ class LearningEngine:
                 # break out of game if too many turns and no one has won
                 if step_idx > max_plies: break
 
-                _, expected_action = map(int, moves[step_idx].decode('utf-8').split(delimiter))
+                expected_action = move_history[step_idx].split(delimiter)[-1]
                 expected_action = action_ls.index(expected_action)
                 # logger.info(step_idx, extra={ 'tags': ['dev_mssg: step_idx'] })
                 if step_idx % 2 != 0:
@@ -57,7 +57,7 @@ class LearningEngine:
                                                     (step_idx % 2) + 1, expected_action)
 
                     # Perform one step of the optimization (on the target network)
-                    current_agent.optimize()
+                    self.agent.optimize()
 
                     # Store the transition in memory
                     self.agent.memory.remember(state, action, next_state, reward)

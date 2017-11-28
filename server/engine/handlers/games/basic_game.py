@@ -22,8 +22,8 @@ class BasicGame:
                 or grid.cpu().numpy()[:, :, width-1, 0] == 1 
 
     def calc_mime_reward(self, state_for_mime, state_for_user, turn):
-        _, _, y_user, x_user = np.where( state_for_user ==  turn )
-        _, _, y_mime, x_mime = np.where( state_for_mime ==  turn )
+        _, _, y_user, x_user = np.where( state_for_user.cpu().numpy() ==  turn )
+        _, _, y_mime, x_mime = np.where( state_for_mime.cpu().numpy() ==  turn )
         if y_user == y_mime and x_user == x_mime:
             return -2
         else:

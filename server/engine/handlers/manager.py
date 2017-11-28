@@ -76,11 +76,19 @@ def init_learning_engine(fbid, game_key, mode, delimiter=':'):
     #  break out if no user data found
     if user_data is None: return False
 
-    #  check if session data is legit
-    if r.exists(game_key + delimiter + 'game_meta') == 0: return False
+    # check if game key was passed
+    if game_key is None:
+        #  get game meta data from user data
+        game_history = user_data['trainAI_games'][-1]
+        game_meta = json.loads(game_history['game_meta'])
+    
+    #  check if session data is legit    
+    elif r.exists(game_key + delimiter + 'game_meta') == 0: 
+        return False
 
-    #  get game meta data from session
-    game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
+    else:
+        #  get game meta data from session
+        game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
 
     game_width, game_height = game_meta['grid_width'], game_meta['grid_height']
     obstacles = game_meta['obstacles']
@@ -92,7 +100,7 @@ def init_learning_engine(fbid, game_key, mode, delimiter=':'):
     rival.init_game(game_width, game_height, obstacles)
 
     # fast forward game
-    if r.exists(game_key + delimiter + 'moves') == 0:
+    if mode != 'trainMime' and r.exists(game_key + delimiter + 'moves') == 0:
         moves = r.lrange(game_key + delimiter + 'moves',0,-2)
         logger.info(moves, extra={ 'tags': ['dev_mssg:MOVES']})
         if len(moves) > 0:
@@ -149,7 +157,9 @@ def init_game(game_key, delimiter=':'):
         "error": "INIT FAILURE"
     }
 
-def launch_training(fbid, learner_name, n_iters=1000):
+def launch_training(fbid, learner_name, n_iters=500):
+    client = MongoClient(os.environ['MONGO_HOST'])
+    
     # load the primary learning engine
     user_data = client.admin.users.find_one({ 'id': fbid })
     learner = loads(user_data[learner_name])
@@ -161,7 +171,7 @@ def launch_training(fbid, learner_name, n_iters=1000):
         opposing_engine.agent.load_weights(user_data['the_rival_weights']) 
         game_history = user_data['trainAI_games'][-1]
         moves = game_history['moves'][::-1]
-        learner.train_mime(opposing_engine.agent, moves[1:], 500)
+        learner.train_mime(opposing_engine.agent, moves[1:], n_iters)
     else:
         # train the learning engine's agent
         result = learner.train_agent(learner.agent, n_iters) 
@@ -213,7 +223,7 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
     print(next_state.cpu().numpy())
 
     # moves.append()
-    r.lpush(game_key + delimiter + 'moves', " ".join(map(str, ['Player'+str(turn), action_ls[agent_action[0, 0]] ])))
+    r.lpush(game_key + delimiter + 'moves', delimiter.join(map(str, ['Player'+str(turn), action_ls[agent_action[0, 0]] ])))
 
     return status 
 

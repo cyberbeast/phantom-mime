@@ -2,6 +2,7 @@ import hug, redis,os
 from handlers.manager import next_move, init_game, init_learning_engine, launch_training
 from pickle import loads, dumps
 from pymongo import MongoClient
+from multiprocessing import Process
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,25 +23,25 @@ def nextMove(key, mode):
         response = next_move(key, rival)
         logger.info(response, extra={ 'tags': ['dev_mssg:SUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE']})
     except Exception as e:
-        # pass
         logging.exception('UNSUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE')
-        # logger.info(e, extra={ 'tags': ['dev_mssg:UNSUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE']})
     r.set(key + ':learning_engine', dumps(rival))
     return response
 
 @hug.get("/trainMime")
 def trainMime(fbid):
-    # 
+    learner_name = 'mime'
+    init_learning_engine(fbid, None, "trainMime")
+    p = Process(target=launch_training, args=(fbid, learner_name))
+    p.start()
     return True
 
 
 @hug.get("/gameInit")
 def gameInit(key, fbid, gameMode="PvP" ):
-    # Possible Modes are: "PvP", "PvAI", "trainAI"
+    logger.info("Reaching here")
+    '''Possible Modes are: "PvP", "PvAI", "trainAI"'''
     response = init_game(key)
     errorMessage = "gameInit Failure: "
-    # logger.info("REACHING gameInit: ", gameMode)
-    # logger.info(fbid)
     
     if gameMode == 'trainAI':
         init_learning_engine_STATUS = init_learning_engine(fbid, key, gameMode)
@@ -59,16 +60,9 @@ def gameInit(key, fbid, gameMode="PvP" ):
                     r.set(key + ':learning_engine', dumps(rival))
                 logger.info(launch_training_STATUS, extra={ 'tags': ['dev_mssg:launch_training_STATUS']} )
             except Exception as e:
-                # if hasattr(e, 'message'):
-                #     logger.info(e.message, extra={ 'tags': 'dev_mssg:LAUNCH_TRAINING BROKE'})
-                # else:
-                #     logger.info(e, extra={ 'tags': 'dev_mssg:LAUNCH_TRAINING BROKE'})
                 logging.exception('LAUNCHING TRAINING BROKE!')
             
         else:
             return errorMessage + "init_learning engine failure!!!"
 
-    # print("KEY IS: " + key)
-    # print("\n\n\nBELOW THIS...")
-    # print(response)
     return response
