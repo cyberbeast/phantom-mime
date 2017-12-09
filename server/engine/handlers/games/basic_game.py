@@ -47,10 +47,6 @@ class BasicGame:
         #  determine the new position of player based on turn and action
         _, _, y_old, x_old = np.where( state ==  turn )
         x_new, y_new = self.action_set[action](x_old, y_old)
-        # print(x_old, y_old)
-        # print('inside game logic')
-        # print(turn, x_new, y_new)
-        # print(grid)
 
 
         #  make sure the new position is valid (wrt game rules)
@@ -62,5 +58,4 @@ class BasicGame:
         #  update the grid with the player's new position
         grid[:, :, y_old, x_old] = 0
         grid[:, :, y_new, x_new] = turn 
-        # print(grid)
         return grid

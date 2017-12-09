@@ -139,9 +139,6 @@ def init_game(game_key, delimiter=':'):
         else:
             game_meta = json.loads(game_meta)
 
-        print("LOOK HERE FOR: " + game_key)
-        print(game_meta)
-
         # send back game metadata as response
         response_data = {
             "boardSize": {
@@ -201,29 +198,22 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
     #  make agent choose an action
     print('\nUpdating game state by agent action...')
     turn = (int(user_turn) % 2) + 1
-    agent_action = rival.agent.select_action(state)
-    next_state, _, done, _ = rival.env.step(agent_action[0, 0], turn)
     retries = 0
 
-    #  repeat if chosen action is invalid
-    # while np.array_equal(state.cpu().numpy(), next_state.cpu().numpy()):
-    while torch.equal(state, next_state):
-        print(next_state.cpu().numpy())
-        print(state.cpu().numpy())
-        print(torch.equal(state, next_state))
+    #  repeat until chosen action is valid or game has ended
+    while True:
         print('\nUpdating game state by agent action (retry {})...'.format(retries))
+
         #  agent chooses randomly if too many invalid moves are chosen
         #  otherwise choose from learned weights
         agent_action = rival.agent.select_action(state, retries < retry_limit)
-        # print(turn)
         next_state, _, done, _ = rival.env.step(agent_action[0,0], turn)
         retries += 1
-        if done: break
-        # break
 
-    print(next_state.cpu().numpy())
+        if torch.equal(state, next_state) or done: break
 
-    r.lpush(game_key + delimiter + 'moves', delimiter.join(map(str, ['Player'+str(turn), action_ls[agent_action[0, 0]] ])))
+    curr_move = ['Player' + str(turn), action_ls[agent_action[0, 0]] ]
+    r.lpush(game_key + delimiter + 'moves', delimiter.join(curr_move))
 
     return status 
 
@@ -236,6 +226,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    #  pdb.set_trace()
-    rival = init_learning_engine()
-    next_move(rival, 'up', 1)
+    #  old code to locally test modules
+    #  rival = init_learning_engine()
+    #  next_move(rival, 'up', 1)

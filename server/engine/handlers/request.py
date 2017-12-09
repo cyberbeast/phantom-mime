@@ -11,24 +11,27 @@ client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
 
 @hug.get("/request")
-def request(name:str="World"):
+def request(name="World"):
     return "Hello, {name}".format(name=name)
 
 @hug.get("/nextMove")
 def nextMove(key, mode):
-    '''This API returns the next move for an AI agent based on the move made by a human player'''
+    '''This API endpoint returns the next move for an AI agent based on the move made by a human player'''
     #  get learning engine from session(redis) data
     rival = loads(r.get(key + ':learning_engine'))
+
     try:
         response = next_move(key, rival)
-        logger.info(response, extra={ 'tags': ['dev_mssg:SUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE']})
+        #  logger.info(response, extra={ 'tags': ['dev_mssg:SUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE']})
     except Exception as e:
         logging.exception('UNSUCCESSFUL RESPONSE FROM REQUEST NEXT MOVE')
-    r.set(key + ':learning_engine', dumps(rival))
+
+    #  r.set(key + ':learning_engine', dumps(rival))
     return response
 
 @hug.get("/trainMime")
 def trainMime(fbid):
+    '''This API endpoint launches a training session for the learning engine responsible for profiling the user's gameplay'''
     learner_name = 'mime'
     init_learning_engine(fbid, None, "trainMime")
     p = Process(target=launch_training, args=(fbid, learner_name))
@@ -37,8 +40,9 @@ def trainMime(fbid):
 
 @hug.get("/initMime")
 def initMime(key, fbid, mode):
+    '''This API endpoint initializes the learning engine responsible for profiling the user's gameplay behaviour'''
     init_learning_engine_STATUS = init_learning_engine(fbid, key, mode)
-    logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
+    #  logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
     
     if init_learning_engine_STATUS:
         learner_name = 'the_rival' if mode == 'trainAI' else 'mime'
@@ -53,14 +57,14 @@ def initMime(key, fbid, mode):
 
 @hug.get("/gameInit")
 def gameInit(key, fbid, gameMode="PvP" ):
-    logger.info("Reaching here in gameInit")
-    '''Possible Modes are: "PvP", "PvAI", "trainAI"'''
+    '''This API endpoint initializes a game board and other requisite components depending on the mode.
+    Possible Modes are: "PvP", "PvAI", "trainAI"'''
     response = init_game(key)
     errorMessage = "gameInit Failure: "
     
     if gameMode == 'trainAI':
         init_learning_engine_STATUS = init_learning_engine(fbid, key, gameMode)
-        logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
+        #  logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
         if init_learning_engine_STATUS:
             learner_name = 'the_rival' if gameMode == 'trainAI' else 'mime'
             try:
@@ -73,7 +77,7 @@ def gameInit(key, fbid, gameMode="PvP" ):
                     rival = loads(user_data[learner_name])
                     rival.agent.load_weights(user_data[learner_name + '_weights'])
                     r.set(key + ':learning_engine', dumps(rival))
-                logger.info(launch_training_STATUS, extra={ 'tags': ['dev_mssg:launch_training_STATUS']} )
+                #  logger.info(launch_training_STATUS, extra={ 'tags': ['dev_mssg:launch_training_STATUS']} )
             except Exception as e:
                 logging.exception('LAUNCHING TRAINING BROKE!')
             

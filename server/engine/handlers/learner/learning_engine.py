@@ -21,7 +21,7 @@ class LearningEngine:
         if learner_type == 'the_rival':
             self.agent.init_model('qnet')
         else:
-            #  placeholder: replace with proper model name for mime
+            #  placeholder: replace with more suitable model for mime if there exists 
             self.agent.init_model('qnet')
 
     def init_game(self, width, height, obstacles):

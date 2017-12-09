@@ -27,7 +27,6 @@ class GameEnv:
 
     def step(self, action, turn, expected_action=None):
         new_state = self.game_logic.process_action(self.grid.clone(), action, turn)
-        #  logging.exception('Copying tensors broke!')
         reward_val = self.game_logic.calc_reward(self.grid, new_state)
         if expected_action is not None:
             state_for_user = self.game_logic.process_action(self.grid.clone(), expected_action, turn)
