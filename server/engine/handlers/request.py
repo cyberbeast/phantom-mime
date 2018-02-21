@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
 
+'''
+    LOG FORMAT for docker debugging:
+    logger.info(value, extra={ 'tags': ['debug_mssg_type:"debug_mssg"']} )
+'''
+
 @hug.get("/request")
 def request(name="World"):
     return "Hello, {name}".format(name=name)
@@ -33,7 +38,7 @@ def nextMove(key, mode):
 def trainMime(fbid):
     '''This API endpoint launches a training session for the learning engine responsible for profiling the user's gameplay'''
     learner_name = 'mime'
-    init_learning_engine(fbid, None, "trainMime")
+    init_learning_engine(fbid, None, learner_name) 
     p = Process(target=launch_training, args=(fbid, learner_name))
     p.start()
     return True
@@ -60,28 +65,23 @@ def gameInit(key, fbid, gameMode="PvP" ):
     '''This API endpoint initializes a game board and other requisite components depending on the mode.
     Possible Modes are: "PvP", "PvAI", "trainAI"'''
     response = init_game(key)
-    errorMessage = "gameInit Failure: "
-    
+    errorMessage = "gameInit Failure: {}"
+    learner_name = 'the_rival' if gameMode == 'trainAI' else 'mime'
+
     if gameMode == 'trainAI':
-        init_learning_engine_STATUS = init_learning_engine(fbid, key, gameMode)
-        #  logger.info(init_learning_engine_STATUS, extra={ 'tags': ['dev_mssg:"init_learning_engine_STATUS :"']} )
-        if init_learning_engine_STATUS:
-            learner_name = 'the_rival' if gameMode == 'trainAI' else 'mime'
-            try:
-                launch_training_STATUS = launch_training(fbid, learner_name)
-                if not launch_training_STATUS:
-                    return errorMessage + "launch_training failure!!!"
-                else:
-                    # load learner from user data(mongo), load its learnt weights, dump it in session data(redis)
-                    user_data = client.admin.users.find_one({ 'id': fbid })
-                    rival = loads(user_data[learner_name])
-                    rival.agent.load_weights(user_data[learner_name + '_weights'])
-                    r.set(key + ':learning_engine', dumps(rival))
-                #  logger.info(launch_training_STATUS, extra={ 'tags': ['dev_mssg:launch_training_STATUS']} )
-            except Exception as e:
-                logging.exception('LAUNCHING TRAINING BROKE!')
-            
+        status, mssg = init_learning_engine(fbid, key, learner_name)
+        if status:
+            status, mssg = launch_training(fbid, learner_name)
+            if status:
+                # load learner from user data(mongo), load its learnt weights, 
+                #  dump it in session data(redis)
+                user_data = client.admin.users.find_one({ 'id': fbid })
+                rival = loads(user_data[learner_name])
+                rival.agent.load_weights(user_data[learner_name + '_weights'])
+                r.set(key + ':learning_engine', dumps(rival))
+            else:
+                return errorMessage.format(mssg) 
         else:
-            return errorMessage + "init_learning engine failure!!!"
+            return errorMessage.format(mssg) 
 
     return response

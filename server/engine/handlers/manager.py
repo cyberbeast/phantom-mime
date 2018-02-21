@@ -68,57 +68,53 @@ def _generate_obstacles(mx, my, max_removed):
     
     return rock_ls
 
-def init_learning_engine(fbid, game_key, mode, delimiter=':'):
+def init_learning_engine(fbid, game_key, learner_name, delimiter=':'):
     print('\nInitializing learning engine. Please wait..')
     #  get user data from mongodb
     user_data = client.admin.users.find_one({ 'id': fbid })
     
     #  break out if no user data found
-    if user_data is None: return False
+    if user_data is None: return False, 'No User Data Found!'
 
     # check if game key was passed
     if game_key is None:
-        #  get game meta data from user data
+        #  no game key found, so get game meta data from user data
         game_history = user_data['trainAI_games'][-1]
         game_meta = json.loads(game_history['game_meta'])
     
-    #  check if session data is legit    
-    elif r.exists(game_key + delimiter + 'game_meta') == 0: 
-        return False
-
-    else:
-        #  get game meta data from session
+    #  game key exists, so check if session data is legit    
+    elif r.exists(game_key + delimiter + 'game_meta') > 0: 
+        #  session data is legit, so get game meta data from session
         game_meta = json.loads(r.get(game_key + delimiter + 'game_meta'))
 
+    else:
+        #  session data is not legit, so exit with message
+        return False, 'No Game Session Data Found!'
+
+    #  unpack game meta components
     game_width, game_height = game_meta['grid_width'], game_meta['grid_height']
     obstacles = game_meta['obstacles']
-
-    learner_name = 'the_rival' if mode == 'trainAI' else 'mime'
 
     #  init the learner
     rival = LearningEngine(learner_name)
     rival.init_game(game_width, game_height, obstacles)
 
-    # fast forward game
-    if mode != 'trainMime' and r.exists(game_key + delimiter + 'moves') == 0:
+    # fast forward game if learner is stepping in midway (not training)
+    if r.exists(game_key + delimiter + 'moves') == 0:
         moves = r.lrange(game_key + delimiter + 'moves',0,-2)
-        logger.info(moves, extra={ 'tags': ['dev_mssg:MOVES']})
-        if len(moves) > 0:
-            _fast_forward_game(rival, game_meta, moves)
+        if len(moves) > 0: _fast_forward_game(rival, game_meta, moves)
     
-    #  load saved weights if any, store model initial weights otherwise
-    if (learner_name + '_weights') in user_data:
-        rival.agent.load_weights(user_data[learner_name + '_weights'])
-    else:
-        user_data[learner_name + '_weights'] = rival.agent.save_weights()
-
     #  save the learner in mongodb for use later
     user_data[learner_name] = dumps(rival)
+    
+    #  if brand new learner, create a placeholder for its weights
+    weights_key = learner_name + '_weights'
+    if weights_key not in user_data.keys(): user_data[weights_key] = None 
 
     print('Learning engine initialization complete!\n')
     client.admin.users.update_one({ 'id': fbid }, { "$set": user_data })
 
-    return True 
+    return True, 'Success'
 
 def init_game(game_key, delimiter=':'): 
     #  get user status
@@ -160,27 +156,37 @@ def launch_training(fbid, learner_name, n_iters=500):
     # load the primary learning engine
     user_data = client.admin.users.find_one({ 'id': fbid })
     learner = loads(user_data[learner_name])
-    learner.agent.load_weights(user_data[learner_name + '_weights'])
     
-    # load appropriate opposing engine
     if learner_name == 'mime':
-        opposing_engine= loads(user_data['the_rival'])
-        opposing_engine.agent.load_weights(user_data['the_rival_weights']) 
-        game_history = user_data['trainAI_games'][-1]
-        moves = game_history['moves'][::-1]
-        learner.train_mime(opposing_engine.agent, moves[1:], n_iters)
-    else:
-        # train the learning engine's agent
-        result = learner.train_agent(learner.agent, n_iters) 
-        if result is not None:
-            user_data[learner_name + '_plots'] = result
+        print('\nLaunching Mime Training. Please wait ..')
+        learner.agent.load_weights(user_data[learner_name + '_weights'])
 
-    learner.env.reset()
+        # load appropriate opposing engine
+        opposing_engine = loads(user_data['the_rival'])
+        opposing_engine.agent.load_weights(user_data['the_rival_weights']) 
+
+        #  load the moves from the game history and reverse it
+        #  to start from the beginning
+        moves = user_data['trainAI_games'][-1]['moves'][::-2]
+        learner.train_mime(opposing_engine.agent, moves, n_iters)
+        print('Mime Training Complete!\n')
+    else:
+        #  exit successfully if learner already trained
+        if user_data[learner_name + '_weights'] is not None: return True, 'Success'
+        
+        # train the learning engine's agent and store performance viz if exists
+        print('\nLaunching Rival Training. Please wait ..')
+        result = learner.train_agent(learner.agent, n_iters) 
+        if result is not None: user_data[learner_name + '_plots'] = result
+        print('Rival Training Complete!\n')
 
     # dump the learnt weights to user data(mongo)
+    print('\nSaving Training Weights. Please wait..')
+    learner.env.reset()
     user_data[learner_name + '_weights'] = learner.agent.save_weights()
     client.admin.users.update_one({ 'id': fbid }, { '$set': user_data })
-    return True
+    print('Saving Training Weights Completed!\n')
+    return True, 'Success'
 
 def next_move(game_key, rival, delimiter=':', retry_limit=50):
     status = True
