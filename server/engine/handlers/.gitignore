@@ -1,8 +1,0 @@
-swap files
-*swp
-
-compiled python files
-*.pyc
-
-env files
-.env
