@@ -2,6 +2,8 @@ version: '3'
 services:
   webserver:
     build: .
-    command: echo 'ready'
+    command: python server.py
     volumes:
       - ./src:/home/server
+    ports:
+      - "8080:8080"
