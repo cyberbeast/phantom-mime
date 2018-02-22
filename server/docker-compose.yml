@@ -1,0 +1,7 @@
+version: '3'
+services:
+  webserver:
+    build: .
+    command: echo 'ready'
+    volumes:
+      - ./src:/home/server

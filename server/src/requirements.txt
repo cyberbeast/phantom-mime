@@ -1,0 +1,4 @@
+cchardet
+aiohttp
+aiodns
+python-socketio
