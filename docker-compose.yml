@@ -16,6 +16,7 @@ services:
     image: pm/gunicorn
     build: ./server/gunicorn
     environment:
+      - PYTHONUNBUFFERED=1
       - DQN_ROOT=/src/handlers
       - WIDTH=14
       - HEIGHT=14
