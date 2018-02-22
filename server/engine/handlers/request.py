@@ -4,9 +4,6 @@ from pickle import loads, dumps
 from pymongo import MongoClient
 from multiprocessing import Process
 
-import logging
-logger = logging.getLogger(__name__)
-
 client = MongoClient(os.environ['MONGO_HOST'])
 r = redis.Redis(host='redis')
 

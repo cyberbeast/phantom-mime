@@ -5,10 +5,6 @@ import torch, numpy as np, redis, json, random
 from pickle import loads, dumps
 from pymongo import MongoClient
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 from learner.learning_engine import LearningEngine
 
 client = MongoClient(os.environ['MONGO_HOST'])
@@ -193,7 +189,7 @@ def next_move(game_key, rival, delimiter=':', retry_limit=50):
     
     #  get user's recent action and game turn from session data
     moves = r.lrange(game_key + delimiter + 'moves',0, -2)
-    logger.info(moves, extra={ 'tags': ['dev_mssg:user_moves']})
+    #  logger.info(moves, extra={ 'tags': ['dev_mssg:user_moves']})
     user_turn, user_action = moves[0].decode('utf-8').split(delimiter)
 
     #  get the current state of the game post user action
@@ -231,7 +227,3 @@ if __name__ == '__main__':
                             help='number of epochs to train agent for')
 
     args = parser.parse_args()
-    
-    #  old code to locally test modules
-    #  rival = init_learning_engine()
-    #  next_move(rival, 'up', 1)
