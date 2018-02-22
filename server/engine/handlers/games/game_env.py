@@ -1,9 +1,6 @@
 import torch
 from copy import deepcopy
 
-import logging
-logger = logging.getLogger(__name__)
-
 from games.basic_game import BasicGame 
 
 class GameEnv:

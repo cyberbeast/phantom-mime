@@ -1,11 +1,9 @@
-import logging, matplotlib, io, base64, pdb
+import matplotlib, io, base64, pdb
 matplotlib.use('Agg')
 
 
 import matplotlib.pyplot as plt, seaborn as sns
 from itertools import count
-
-logger = logging.getLogger(__name__)
 
 #  local imports 
 from agents.dqn_agent import DQNAgent
@@ -70,6 +68,7 @@ class LearningEngine:
     def train_agent(self, opponent, nb_episodes, plot_performance=False):
         avg_reward_ls = []
 
+        #  logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
         for episode_idx in range(nb_episodes):
             # logger.info(episode_idx, extra={ 'tags': ['dev_mssg: episode_idx'] })
             self.env.reset()
@@ -83,7 +82,6 @@ class LearningEngine:
                 # break out of game if too many turns and no one has won
                 if step_idx > max_plies: break
 
-                # logger.info(step_idx, extra={ 'tags': ['dev_mssg: step_idx'] })
                 #  set current player based on turn
                 current_agent = self.agent if step_idx % 2 == 0 else opponent
 
