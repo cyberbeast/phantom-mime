@@ -1,4 +1,4 @@
-import pygame, sys, pdb
+import pygame, sys, aiohttp, os, pdb
 from pygame import *
 
 WHITE = (255, 255, 255)
@@ -14,6 +14,30 @@ def calc_edge_pts(x, y, paddle_dims):
         (x + paddle_width // 2, y + paddle_height // 2),
         (x + paddle_width // 2, y - paddle_height // 2),
     ]
+
+def propagate_keypress(ws, keypress_event, player_idx):
+    keypress_data = {
+        'event_type': keypress_event.type,
+        'event_key': keypress_event.key,
+        'player_idx': player_idx
+    }
+    await ws.send_str(json.dumps(keypress_data))
+
+def on_keypress_notification(ws, decision_engine):
+    #  assuming response was received properly
+    keypress_resp = await ws.receive()
+    keypress_data = keypress_resp.json()
+    decision_engine.handle_keypress(**keypress_data)
+
+async def init_game(ws):
+    await ws.send_str('c_init')
+    channel_resp = await ws.receive()
+    if channel_resp.type == aiohttp.WSMsgType.TEXT:
+        return channel_resp.json()
+    elif channel_resp.type == aiohttp.WSMsgType.CLOSED:
+        return 'channel closed' 
+    elif channel_resp.type == aiohttp.WSMsgType.ERROR:
+        return 'error in the channel'
 
 class RenderingEngine:
     def __init__(self):
@@ -68,11 +92,17 @@ class DecisionEngine:
     def __init__(self):
         self.rendering_engine = RenderingEngine()
 
-    def init_game(self, paddle_vel_incr, fps, player_idx, rendering_meta):
+    def init_game(self, paddle_vel_incr, fps, player_idx, rendering_meta, ws=None):
         self.paddle_vel_incr = paddle_vel_incr
         self.fps = fps
         self.player_idx = player_idx
         self.rendering_engine.init_game(**rendering_meta)
+        self.websocket = ws
+
+    def handle_keypress(self, event_type, event_key, player_idx):
+        vel_dir = 0 if event_type == KEYUP else -1 if event_key == K_UP else 1
+        paddle_incr = self.paddle_vel_incr * vel_dir
+        self.rendering_engine.paddle_velocities[player_idx] = paddle_incr
 
     def reset_ball_pos(self, move_right):
         screen_width, screen_height = self.rendering_engine.screen_dims
@@ -137,21 +167,44 @@ class DecisionEngine:
         while True:
             self.rendering_engine.draw_canvas()
         
+            #  listen for keypress on websocket channel
+            await on_keypress_notification(self.ws)
+
+            #  listen for local keypress events
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
 
                 elif event.type in ( KEYDOWN, KEYUP ):
-                    vel_dir = 0 if event.type == KEYUP else -1 if event.key == K_UP else 1
-                    paddle_incr = self.paddle_vel_incr * vel_dir
-                    self.rendering_engine.paddle_velocities[self.player_idx] = paddle_incr
+                    self.handle_keypress(event.type, event.key, self.player_idx)
+                    propagate_keypress(self.ws, event, self.player_idx)
 
             self.update_game_entities()
 
             pygame.display.update()
             self.rendering_engine.clock.tick(self.fps)
 
+class Pong:
+    def __init__(self, server_endpoint):
+        self.server_endpoint = server_endpoint
+        self.decision_engine = Decision_Engine()
+        self.rendering_engine = RenderingEngine()
+
+    def start_game_session(self, channel_name):
+        session = aiohttp.ClientSession() #  create session for game
+        channel_uri = os.path.join(self.server_endpoint, channel_name)
+
+        #  connect to pvp game channel
+        with session.ws_connect(channel_uri) as ws:
+            init_resp = init_game(ws)
+            if init_resp not in ('channel_closed', 'error in the channel'):
+                rendering_meta, decision_meta = init_resp.items()
+                self.decision_engine.init_game(**decision_meta)
+                decision_engine.start_game()
+            else:
+                print('Failed to start game!')
+            
 if __name__ == '__main__':
     rendering_meta = { 
         'screen_width': 600, 
