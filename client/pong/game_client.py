@@ -15,7 +15,7 @@ def calc_edge_pts(x, y, paddle_dims):
         (x + paddle_width // 2, y - paddle_height // 2),
     ]
 
-def propagate_keypress(ws, keypress_event, player_idx):
+async def propagate_keypress(ws, keypress_event, player_idx):
     keypress_data = {
         'event_type': keypress_event.type,
         'event_key': keypress_event.key,
@@ -23,7 +23,7 @@ def propagate_keypress(ws, keypress_event, player_idx):
     }
     await ws.send_str(json.dumps(keypress_data))
 
-def on_keypress_notification(ws, decision_engine):
+async def on_keypress_notification(ws, decision_engine):
     #  assuming response was received properly
     keypress_resp = await ws.receive()
     keypress_data = keypress_resp.json()
@@ -160,7 +160,7 @@ class DecisionEngine:
         self.rendering_engine.paddle_Y_pos = paddle_Y_pos
         self.rendering_engine.scores = scores
 
-    def start_game(self):
+    async def start_game(self):
         coin_toss = True # TODO: randomize it
 
         self.reset_ball_pos(coin_toss)
@@ -191,7 +191,7 @@ class Pong:
         self.decision_engine = Decision_Engine()
         self.rendering_engine = RenderingEngine()
 
-    def start_game_session(self, channel_name):
+    async def start_game_session(self, channel_name):
         session = aiohttp.ClientSession() #  create session for game
         channel_uri = os.path.join(self.server_endpoint, channel_name)
 
@@ -201,7 +201,7 @@ class Pong:
             if init_resp not in ('channel_closed', 'error in the channel'):
                 rendering_meta, decision_meta = init_resp.items()
                 self.decision_engine.init_game(**decision_meta)
-                decision_engine.start_game()
+                await decision_engine.start_game()
             else:
                 print('Failed to start game!')
             
