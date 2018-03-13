@@ -1,36 +1,12 @@
 import random, pygame, sys, pdb
 from pygame import *
 
-pygame.init()
-fps = pygame.time.Clock()
-
 WHITE = (255, 255, 255)
 ORANGE = (255,140,0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 
-def calc_edge_pts(x, y, paddle_dims):
-    paddle_width, paddle_height = paddle_dims
-    return [ 
-        (x - paddle_width // 2, y - paddle_height // 2),
-        (x - paddle_width // 2, y + paddle_height // 2),
-        (x + paddle_width // 2, y + paddle_height // 2),
-        (x + paddle_width // 2, y - paddle_height // 2),
-    ]
-
-def keydown(event, paddle_velocities, vel_incr):
-    paddle_velocities[0] = -vel_incr if event.key == K_w else vel_incr if event.key == K_s else 0
-    paddle_velocities[1] = -vel_incr if event.key == K_UP else vel_incr if event.key == K_DOWN else 0
-    return paddle_velocities
-
-def keyup(event, paddle_velocities):
-    if event.key in (K_w, K_s): 
-        paddle_velocities[0] = 0
-    elif event.key in (K_UP, K_DOWN): 
-        paddle_velocities[1] = 0
-    return paddle_velocities
-
-class Pong:
+class RenderingEngine:
     def __init__(self, screen_width, screen_height, ball_radius, pad_width, pad_height):
         self.screen_dims = ( screen_width, screen_height )
         self.ball_radius = ball_radius
@@ -47,22 +23,6 @@ class Pong:
 
         self.window = pygame.display.set_mode((screen_width, screen_height), 0, 32)
         pygame.display.set_caption('Daylight Pong')
-
-    def __init_ball_move(self, move_right):
-        self.ball_pos = [ self.screen_dims[0] // 2, self.screen_dims[1] // 2 ]
-        self.ball_vel = [ 2 if move_right else -2, -2 ]
-
-    def __handle_events(self):
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                self.paddle_velocities = keydown(event, self.paddle_velocities, 8) 
-
-            elif event.type == KEYUP:
-                self.paddle_velocities = keyup(event, self.paddle_velocities)
-
-            elif event.type == QUIT:
-                pygame.quit()
-                sys.exit()
 
     def __draw_canvas(self, canvas):
         canvas.fill(BLACK)
@@ -127,17 +87,3 @@ class Pong:
             else:
                 self.scores[ int(not curr_turn) ] += 1
                 self.__init_ball_move(not curr_turn)
-
-    def start_game(self):
-        coin_toss = True # TODO: randomize it
-        self.__init_ball_move(coin_toss)
-        while True:
-            self.__draw_canvas(self.window)
-            self.__handle_events()
-            pygame.display.update()
-            fps.tick(6)
-
-game = Pong(600, 400, 20, 8, 80)
-game.start_game()
-
-
