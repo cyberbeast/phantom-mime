@@ -2,14 +2,17 @@ from aiohttp import web
 import socketio
 import logging
 
+from namespaces.player_v_player import PVPNamespace
+
 sio = socketio.AsyncServer()
 app = web.Application()
 sio.attach(app)
 
+sio.register_namespace(PVPNamespace('/pvp'))
+
 log = logging.getLogger(__name__)
 
-
-async def ping(request):
+def ping(request):
     log.info('Hello, world!')
     return web.json_response({"ping": "pong"})
 
@@ -36,4 +39,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
