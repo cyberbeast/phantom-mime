@@ -3,16 +3,27 @@ from pygame import *
 
 from .rendering_engine import RenderingEngine
 
+def propagate_keypress(ws, keypress_event, player_idx):
+    keypress_data = {
+        'event_type': keypress_event.type,
+        'event_key': keypress_event.key,
+        'player_idx': player_idx
+    }
+    ws.emit('c_keypress_propagate', keypress_data)
+
 class DecisionEngine:    
-    def __init__(self):
+    def __init__(self, socket=None):
+        self.socket = socket
         self.rendering_engine = RenderingEngine()
 
     def init_game(self, paddle_vel_incr, fps, player_idx, rendering_meta, ws=None):
         self.paddle_vel_incr = paddle_vel_incr
         self.fps = fps
         self.player_idx = player_idx
-        self.rendering_engine.init_game(**rendering_meta)
         self.websocket = ws
+
+        rendering_meta['title'] = 'Daylight Pong for Player {}'.format(self.player_idx)
+        self.rendering_engine.init_game(**rendering_meta)
 
     def handle_keypress(self, event_type, event_key, player_idx):
         vel_dir = 0 if event_type == KEYUP else -1 if event_key == K_UP else 1
@@ -75,7 +86,7 @@ class DecisionEngine:
         self.rendering_engine.paddle_Y_pos = paddle_Y_pos
         self.rendering_engine.scores = scores
 
-    async def start_game(self):
+    def start_game(self):
         coin_toss = True # TODO: randomize it
 
         self.reset_ball_pos(coin_toss)
@@ -90,7 +101,7 @@ class DecisionEngine:
 
                 elif event.type in ( KEYDOWN, KEYUP ):
                     self.handle_keypress(event.type, event.key, self.player_idx)
-                    await propagate_keypress(self.ws, event, self.player_idx)
+                    propagate_keypress(self.socket, event, self.player_idx)
 
             self.update_game_entities()
 

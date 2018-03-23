@@ -21,7 +21,8 @@ class RenderingEngine:
         self.paddle_velocities = [ 0, 0 ]
         self.scores = [ 0 , 0 ]
 
-    def init_game(self, screen_width, screen_height, ball_radius, pad_width, pad_height):
+    def init_game(self, screen_width, screen_height, ball_radius, pad_width, 
+                    pad_height, title):
         self.screen_dims = ( screen_width, screen_height )
         self.ball_radius = ball_radius
         self.paddle_dims = ( pad_width, pad_height )
@@ -30,7 +31,7 @@ class RenderingEngine:
         self.paddle_Y_pos = [ screen_height // 2, screen_height // 2 ]
 
         pygame.init()
-        pygame.display.set_caption('Daylight Pong')
+        pygame.display.set_caption(title)
 
         self.canvas= pygame.display.set_mode((screen_width, screen_height), 0, 32)
         self.clock = pygame.time.Clock()
